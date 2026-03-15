@@ -288,10 +288,29 @@
     .admin-header { flex-direction: column; gap: 0.8rem; text-align: center; }
     .table-header { flex-direction: column; }
     .filter-tabs { flex-wrap: wrap; }
-    .table-section { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { min-width: 520px; font-size: 0.78rem; }
-    thead th { padding: 0.6rem 0.6rem; }
-    tbody td { padding: 0.6rem 0.6rem; }
+
+    /* טבלה במובייל — ללא גלילה */
+    .table-section { overflow-x: visible; }
+    table { min-width: 0; width: 100%; font-size: 0.82rem; }
+    thead th { padding: 0.55rem 0.5rem; font-size: 0.68rem; }
+    tbody td { padding: 0.6rem 0.5rem; }
+
+    /* הסתר עמודות פחות חשובות במובייל */
+    .col-phone,
+    .col-date,
+    .col-num  { display: none; }
+
+    /* שורת מחיקה קטנה */
+    .col-del { width: 30px; }
+
+    /* stats grid — 2 בשורה */
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+
+    /* push banner */
+    .push-banner { flex-direction: column; text-align: center; }
+
+    /* permissions */
+    .perm-add-row { flex-direction: column; }
   }
 
   .google-btn {
@@ -431,6 +450,49 @@
   .perm-msg.ok  { color: #2a7a4a; }
   .perm-msg.err { color: #b44; }
   .perm-empty { color: var(--muted); font-style: italic; font-size: 0.85rem; padding: 0.5rem 0; }
+  /* PUSH NOTIFICATIONS */
+  .push-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, var(--navy), var(--navy-m));
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .push-banner-text { font-size: 0.88rem; opacity: 0.9; }
+  .push-banner-text strong { display: block; font-size: 1rem; margin-bottom: 0.2rem; opacity: 1; }
+  .push-enable-btn {
+    background: var(--gold);
+    color: white;
+    border: none;
+    padding: 0.65rem 1.4rem;
+    border-radius: 4px;
+    font-family: 'Alef', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .push-enable-btn:hover { background: #b8935a; transform: translateY(-1px); }
+  .push-enable-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+  .push-status-ok {
+    background: rgba(42,122,74,0.15);
+    border: 1px solid rgba(42,122,74,0.3);
+    color: #1a5a3a;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
 </style>
 </head>
 <body>
@@ -486,6 +548,18 @@
       </div>
     </div>
 
+    <!-- PUSH NOTIFICATIONS BANNER -->
+    <div id="push-banner" class="push-banner" style="display:none">
+      <div class="push-banner-text">
+        <strong>🔔 התראות אישור הגעה</strong>
+        קבל התראה מיידית בכל פעם שאורח מאשר הגעה
+      </div>
+      <button class="push-enable-btn" id="push-btn" onclick="enablePush()">הפעל התראות</button>
+    </div>
+    <div id="push-active" class="push-status-ok" style="display:none">
+      ✅ &nbsp; התראות פעילות — תקבל עדכון על כל אישור הגעה חדש
+    </div>
+
     <!-- TABLE -->
     <div class="table-section">
       <div class="table-header">
@@ -527,6 +601,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <script>
 var firebaseConfig = {
   apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
@@ -538,8 +613,10 @@ var firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-var db   = firebase.firestore();
-var auth = firebase.auth();
+var db        = firebase.firestore();
+var auth      = firebase.auth();
+var messaging = firebase.messaging();
+var VAPID_KEY = "BP5JtYCigNMiDTtjW4W9z1s9wWfI7_Cbzqsfv76IKo6Xc1cwfUzdtS3qVv_tlapjgLBQn67DzidDt73m4GOKqlI";
 var provider = new firebase.auth.GoogleAuthProvider();
 
 var OWNER_EMAIL = "eliezerkolin@gmail.com"; // ← המייל הראשי — לא ניתן למחיקה
@@ -659,7 +736,7 @@ function renderTable() {
     return;
   }
 
-  var html = "<table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th></tr></thead><tbody>";
+  var html = "<table><thead><tr><th>#</th><th>שם</th><th class="col-phone">טלפון</th><th>מגיע?</th><th class="col-num">אורחים</th><th class="col-date">תאריך</th><th class="col-del"></th></tr></thead><tbody>";
 
   filtered.forEach(function(r, i) {
     var phone  = r.phone ? r.phone : "—";
@@ -671,10 +748,10 @@ function renderTable() {
     html += "<tr>";
     html += "<td>" + (i+1) + "</td>";
     html += "<td><strong>" + r.name + "</strong></td>";
-    html += "<td>" + phone + "</td>";
-    html += "<td><span class='badge " + bClass + "'>" + badge + "</span></td>";
-    html += "<td>" + guests + "</td>";
-    html += "<td style='color:var(--muted);font-size:0.8rem'>" + ts + "</td>";
+    html += "<td class=\'col-phone\'>" + phone + "</td>";
+    html += "<td><span class=\'badge " + bClass + "\'>" + badge + "</span></td>";
+    html += "<td class=\'col-num\'>" + guests + "</td>";
+    html += "<td class=\'col-date\' style=\'color:var(--muted);font-size:0.8rem\'>" + ts + "</td>";
     html += "<td><button data-id='" + r.id + "' class='del-btn' style='background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem'>🗑</button></td>";
     html += "</tr>";
   });
@@ -839,6 +916,76 @@ function showPermMsg(text, type) {
   setTimeout(function() { msg.textContent = ""; msg.className = "perm-msg"; }, 4000);
 }
 
+
+// ===== PUSH NOTIFICATIONS =====
+function initPush() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+  // Register service worker
+  navigator.serviceWorker.register('/firebase-messaging-sw.js').then(function(reg) {
+    console.log('SW registered:', reg.scope);
+  }).catch(function(e) {
+    console.warn('SW registration failed:', e);
+  });
+
+  // Check current permission
+  if (Notification.permission === 'granted') {
+    document.getElementById('push-banner').style.display = 'none';
+    document.getElementById('push-active').style.display = 'flex';
+    subscribeToTopic();
+  } else if (Notification.permission === 'default') {
+    document.getElementById('push-banner').style.display = 'flex';
+  }
+  // If denied - hide both (don't bother user)
+}
+
+function enablePush() {
+  var btn = document.getElementById('push-btn');
+  btn.textContent = 'מפעיל...';
+  btn.disabled = true;
+
+  Notification.requestPermission().then(function(permission) {
+    if (permission === 'granted') {
+      subscribeToTopic();
+      document.getElementById('push-banner').style.display = 'none';
+      document.getElementById('push-active').style.display = 'flex';
+    } else {
+      btn.textContent = 'הפעל התראות';
+      btn.disabled = false;
+      alert('לא אישרת התראות. ניתן לשנות בהגדרות הדפדפן.');
+    }
+  });
+}
+
+function subscribeToTopic() {
+  messaging.getToken({ vapidKey: VAPID_KEY }).then(function(token) {
+    if (token) {
+      // Save token to Firestore so index.html can send notifications
+      db.collection('fcm_tokens').doc('admin').set({
+        token: token,
+        updated: new Date().toISOString()
+      }).then(function() {
+        console.log('FCM token saved');
+      });
+
+      // Listen for foreground messages
+      messaging.onMessage(function(payload) {
+        var n = payload.notification || {};
+        if (Notification.permission === 'granted') {
+          new Notification(n.title || 'אישור הגעה חדש!', {
+            body: n.body || '',
+            icon: '/icon.png',
+            dir: 'rtl'
+          });
+        }
+      });
+    }
+  }).catch(function(e) {
+    console.warn('FCM token error:', e);
+  });
+}
+
+// Call initPush after login
 </script>
 </body>
 </html>
