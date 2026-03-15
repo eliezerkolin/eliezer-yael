@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>פאנל ניהול — אלעזר ויעל</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Alef:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #1e2d50;
+    --navy-m: #2d3f6b;
+    --steel:  #6a7fa3;
+    --gold:   #c9a96e;
+    --gold-l: #e8d5b0;
+    --fog:    #e8edf5;
+    --fog-d:  #d4dce9;
+    --white:  #f8fafc;
+    --muted:  #6a7fa3;
+    --text:   #1e2d50;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Alef', sans-serif;
+    background: var(--fog);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== LOGIN PAGE ===== */
+  .login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #1e2d50, #2d3f6b);
+    padding: 24px;
+  }
+
+  .login-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(201,169,110,0.25);
+    border-radius: 8px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+  }
+
+  .login-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    color: var(--gold-l);
+    margin-bottom: 0.3rem;
+  }
+  .login-sub {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: rgba(232,237,245,0.45);
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+  }
+
+  .login-label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: rgba(232,237,245,0.55);
+    text-transform: uppercase;
+    text-align: right;
+    margin-bottom: 0.4rem;
+  }
+
+  .login-input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(201,169,110,0.2);
+    color: white;
+    font-family: 'Alef', sans-serif;
+    font-size: 1rem;
+    border-radius: 4px;
+    outline: none;
+    margin-bottom: 1.2rem;
+    transition: border-color 0.2s;
+    text-align: center;
+    letter-spacing: 0.2em;
+  }
+  .login-input:focus { border-color: var(--gold); }
+
+  .login-btn {
+    width: 100%;
+    padding: 0.95rem;
+    background: var(--gold);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Alef', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-top: 0.3rem;
+  }
+  .login-btn:hover { background: #b8935a; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,169,110,0.3); }
+
+  .login-err {
+    color: #f0a0a0;
+    font-size: 0.8rem;
+    margin-top: 0.8rem;
+    display: none;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 2rem;
+    color: rgba(232,237,245,0.3);
+    font-size: 0.75rem;
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: rgba(232,237,245,0.6); }
+
+  /* ===== ADMIN PANEL ===== */
+  .admin-page { display: none; }
+
+  .admin-header {
+    background: var(--navy);
+    padding: 1.2rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(30,45,80,0.15);
+  }
+  .admin-header-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    color: var(--gold-l);
+  }
+  .admin-header-sub { font-size: 0.7rem; color: rgba(232,237,245,0.4); letter-spacing: 0.12em; }
+
+  .logout-btn {
+    background: transparent;
+    border: 1px solid rgba(201,169,110,0.3);
+    color: rgba(201,169,110,0.7);
+    padding: 0.4rem 1rem;
+    font-family: 'Alef', sans-serif;
+    font-size: 0.78rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { border-color: var(--gold); color: var(--gold-l); }
+
+  .admin-body { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 6px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 16px rgba(30,45,80,0.07);
+    border-top: 3px solid var(--gold);
+  }
+  .stat-card.blue  { border-top-color: var(--navy-m); }
+  .stat-card.green { border-top-color: #5a8a6a; }
+  .stat-card.red   { border-top-color: #8a4a4a; }
+  .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; line-height: 1; color: var(--navy); }
+  .stat-lbl { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; margin-top: 0.4rem; }
+
+  /* TABLE SECTION */
+  .table-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 20px rgba(30,45,80,0.07);
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--fog);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .table-title { font-weight: 700; color: var(--navy); font-size: 1rem; }
+
+  .filter-tabs { display: flex; gap: 0.4rem; }
+  .ftab {
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--fog-d);
+    background: var(--white);
+    color: var(--muted);
+    font-family: 'Alef', sans-serif;
+    font-size: 0.78rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ftab.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  .export-btn {
+    padding: 0.4rem 1rem;
+    background: var(--fog);
+    border: 1px solid var(--fog-d);
+    color: var(--muted);
+    font-family: 'Alef', sans-serif;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .export-btn:hover { background: var(--navy); color: white; border-color: var(--navy); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--fog); padding: 0.75rem 1.2rem; text-align: right; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--fog-d); }
+  tbody td { padding: 0.85rem 1.2rem; border-bottom: 1px solid var(--fog); font-size: 0.9rem; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #f5f8ff; }
+
+  .badge { display: inline-block; padding: 0.2rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+  .b-yes { background: rgba(45,100,80,0.12); color: #1a5a40; }
+  .b-no  { background: rgba(160,60,60,0.12); color: #7a2020; }
+
+  .empty-state {
+    padding: 4rem;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty-state .ei { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .empty-state p { font-style: italic; }
+
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    padding: 0.9rem 1.5rem;
+    background: white;
+    border: 1.5px solid rgba(232,237,245,0.25);
+    border-radius: 50px;
+    color: #1e2d50;
+    font-family: 'Alef', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 0.5rem;
+  }
+  .google-btn:hover {
+    background: #f5f5f5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .google-btn svg { flex-shrink: 0; }
+
+  .access-denied {
+    display: none;
+    background: rgba(180,60,60,0.15);
+    border: 1px solid rgba(180,60,60,0.4);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 1rem;
+    color: #f0b0b0;
+  }
+  .access-denied .di { font-size: 2rem; margin-bottom: 0.5rem; }
+  .access-denied p { font-size: 0.85rem; opacity: 0.85; line-height: 1.5; }
+
+  @media(max-width:600px){
+    .admin-header { flex-direction: column; gap: 0.8rem; text-align: center; }
+    .table-header { flex-direction: column; }
+    .filter-tabs { flex-wrap: wrap; }
+    thead { display: none; }
+    tbody tr { display: block; padding: 0.8rem; border-bottom: 2px solid var(--fog); }
+    tbody td { display: flex; justify-content: space-between; padding: 0.3rem 0; border: none; font-size: 0.85rem; }
+    tbody td::before { content: attr(data-label); color: var(--muted); font-size: 0.7rem; }
+  }
+
+  .google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    background: white;
+    color: #3c4043;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    font-family: 'Alef', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-top: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+  .google-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+  }
+  .google-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .g-spinner {
+    width: 18px; height: 18px;
+    border: 2px solid #ddd;
+    border-top-color: #4285F4;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div style="font-size:2rem;margin-bottom:1rem">✦</div>
+    <h1 class="login-title">אלעזר &amp; יעל</h1>
+    <p class="login-sub">פאנל ניהול אורחים</p>
+
+    <button class="google-btn" id="google-btn" onclick="doGoogleLogin()">
+      <!-- SVG injected by JS -->
+      התחבר עם Google
+    </button>
+
+    <p class="login-err" id="login-err" style="display:none"></p>
+
+    <a class="back-link" href="index.html">← חזרה לאתר</a>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="admin-page" id="admin-page">
+
+  <header class="admin-header">
+    <div>
+      <div class="admin-header-title">אלעזר &amp; יעל — פאנל אורחים</div>
+      <div class="admin-header-sub">05.05.2025 &nbsp;·&nbsp; בית זלטה, כפר חב״ד &nbsp;·&nbsp; <span id="user-email" style="opacity:0.7"></span></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">התנתק</button>
+  </header>
+
+  <div class="admin-body">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-num" id="s-yes">0</div>
+        <div class="stat-lbl">מגיעים</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-num" id="s-total">0</div>
+        <div class="stat-lbl">סה״כ אורחים</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-num" id="s-no">0</div>
+        <div class="stat-lbl">לא מגיעים</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="s-all">0</div>
+        <div class="stat-lbl">סה״כ תגובות</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-section">
+      <div class="table-header">
+        <span class="table-title">רשימת מוזמנים</span>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="filterTable('all', this)">הכל</button>
+            <button class="ftab" onclick="filterTable('yes', this)">מגיעים</button>
+            <button class="ftab" onclick="filterTable('no', this)">לא מגיעים</button>
+          </div>
+          <button class="export-btn" id="refresh-btn" onclick="refreshData()" style="margin-left:0.4rem">🔄 רענן</button>
+          <button class="export-btn" onclick="exportCSV()">⬇ ייצוא CSV</button>
+        </div>
+      </div>
+      <div id="table-wrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
+  authDomain: "eliezer-yael-wedding.firebaseapp.com",
+  projectId: "eliezer-yael-wedding",
+  storageBucket: "eliezer-yael-wedding.firebasestorage.app",
+  messagingSenderId: "980359740134",
+  appId: "1:980359740134:web:b9006d2d90fe71c9ce5927"
+};
+
+const ALLOWED_EMAILS = [
+  'eliezerkolin@gmail.com',
+  // הוסף מיילים נוספים כאן אם תצטרך
+];
+
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let rsvps = [];
+let currentFilter = 'all';
+
+// ===== AUTH STATE =====
+onAuthStateChanged(auth, user => {
+  if (user && ALLOWED_EMAILS.includes(user.email)) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('admin-page').style.display = 'block';
+    document.getElementById('user-email').textContent   = user.email;
+    loadAndRender();
+  } else if (user && !ALLOWED_EMAILS.includes(user.email)) {
+    // התחבר עם מייל לא מורשה
+    signOut(auth);
+    showError('המייל ' + user.email + ' אינו מורשה לגשת לפאנל זה');
+  } else {
+    document.getElementById('login-page').style.display = 'flex';
+    document.getElementById('admin-page').style.display = 'none';
+  }
+});
+
+// ===== GOOGLE LOGIN =====
+window.doGoogleLogin = async function() {
+  const btn = document.getElementById('google-btn');
+  const err = document.getElementById('login-err');
+  err.style.display = 'none';
+  btn.disabled      = true;
+  btn.innerHTML     = '<span class="g-spinner"></span> מתחבר...';
+
+  try {
+    await signInWithPopup(auth, provider);
+    // onAuthStateChanged יטפל במעבר
+  } catch(e) {
+    btn.disabled  = false;
+    btn.innerHTML = googleBtnHTML;
+    if (e.code === 'auth/popup-closed-by-user') return;
+    showError('שגיאה בהתחברות, נסה שוב');
+  }
+};
+
+function showError(msg) {
+  const err       = document.getElementById('login-err');
+  err.textContent = msg;
+  err.style.display = 'block';
+}
+
+const googleBtnHTML = `<svg width="20" height="20" viewBox="0 0 48 48" style="margin-left:0.5rem">
+  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  <path fill="none" d="M0 0h48v48H0z"/>
+</svg>
+התחבר עם Google`;
+
+// ===== LOGOUT =====
+window.logout = async function() {
+  await signOut(auth);
+};
+
+// ===== LOAD DATA =====
+async function loadAndRender() {
+  setLoading(true);
+  try {
+    const snap = await getDocs(query(collection(db, 'rsvps')));
+    rsvps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    rsvps.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+  } catch(e) {
+    document.getElementById('tbl-wrap').innerHTML =
+      '<div class="empty-state"><div class="ei">❌</div><p>שגיאה בטעינת הנתונים</p></div>';
+    setLoading(false);
+    return;
+  }
+  setLoading(false);
+  renderStats();
+  renderTable();
+}
+
+function setLoading(on) {
+  if (on) document.getElementById('tbl-wrap').innerHTML =
+    '<div class="empty-state"><div class="ei" style="animation:spin 1s linear infinite;display:inline-block">⏳</div><p>טוען נתונים...</p></div>';
+}
+
+// ===== STATS =====
+function renderStats() {
+  const yes   = rsvps.filter(r => r.attend === 'yes');
+  const no    = rsvps.filter(r => r.attend !== 'yes');
+  const total = yes.reduce((s, r) => s + (Number(r.guests) || 1), 0);
+  document.getElementById('s-yes').textContent   = yes.length;
+  document.getElementById('s-no').textContent    = no.length;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-all').textContent   = rsvps.length;
+}
+
+// ===== FILTER =====
+window.filterTable = function(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+};
+
+// ===== TABLE =====
+function renderTable() {
+  const filtered = currentFilter === 'all'
+    ? rsvps
+    : rsvps.filter(r => r.attend === currentFilter);
+
+  const wrap = document.getElementById('tbl-wrap');
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="ei">📋</div>
+      <p>${rsvps.length ? 'אין תוצאות לפילטר זה' : 'אין אישורי הגעה עדיין'}</p></div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${filtered.map((r, i) => `
+          <tr id="row-${r.id}">
+            <td data-label="#">${i + 1}</td>
+            <td data-label="שם"><strong>${r.name}</strong></td>
+            <td data-label="טלפון">${r.phone
+              ? `<a href="tel:${r.phone}" style="color:var(--navy-m);text-decoration:none">${r.phone}</a>`
+              : '—'}</td>
+            <td data-label="מגיע?">
+              <span class="badge ${r.attend === 'yes' ? 'b-yes' : 'b-no'}">
+                ${r.attend === 'yes' ? '✓ מגיע/ה' : '✗ לא מגיע/ה'}
+              </span>
+            </td>
+            <td data-label="אורחים">${r.attend === 'yes' ? (r.guests || 1) : '—'}</td>
+            <td data-label="תאריך" style="color:var(--muted);font-size:0.8rem">${r.timestamp || ''}</td>
+            <td>
+              <button onclick="deleteRSVP('${r.id}')"
+                style="background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem;padding:0.2rem 0.5rem"
+                title="מחק רשומה">🗑</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ===== DELETE =====
+window.deleteRSVP = async function(id) {
+  if (!confirm('למחוק את הרשומה?')) return;
+  try {
+    await deleteDoc(doc(db, 'rsvps', id));
+    rsvps = rsvps.filter(r => r.id !== id);
+    renderStats();
+    renderTable();
+  } catch(e) {
+    alert('שגיאה במחיקה');
+  }
+};
+
+// ===== REFRESH =====
+window.refreshData = async function() {
+  const btn = document.getElementById('refresh-btn');
+  btn.textContent = '⏳ מרענן...';
+  btn.disabled    = true;
+  await loadAndRender();
+  btn.textContent = '🔄 רענן';
+  btn.disabled    = false;
+};
+
+// ===== EXPORT CSV =====
+window.exportCSV = function() {
+  const rows = [['שם', 'טלפון', 'מגיע', 'מספר אורחים', 'תאריך אישור']];
+  rsvps.forEach(r => rows.push([
+    r.name, r.phone || '',
+    r.attend === 'yes' ? 'כן' : 'לא',
+    r.attend === 'yes' ? (r.guests || 1) : 0,
+    r.timestamp || ''
+  ]));
+  const csv = '\uFEFF' + rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = `אורחים_אלעזר_ויעל_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.csv`;
+  a.click();
+};
+
+// Init google button HTML after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('google-btn');
+  if (btn) btn.innerHTML = googleBtnHTML;
+});
+</script>
+</body>
+</html>
