@@ -164,9 +164,29 @@
 
   @media(max-width:540px){
     .attend-grid { grid-template-columns:1fr; }
-    .info-item { padding:1.1rem 1.4rem; min-width:110px; }
     .rsvp-card { padding:1.5rem; }
     .admin-row { flex-direction:column; }
+
+    /* Info strip — 2x2 grid on mobile */
+    .info-strip { display:grid; grid-template-columns:1fr 1fr; }
+    .info-item {
+      padding:0.9rem 0.8rem;
+      min-width:0;
+      border-left:none;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    .info-item:nth-child(odd) { border-left:1px solid rgba(255,255,255,0.1); }
+    .info-item:nth-child(3),
+    .info-item:nth-child(4) { border-bottom:none; }
+    .info-lbl { font-size:0.58rem; letter-spacing:0.15em; }
+    .info-val  { font-size:1rem; }
+
+    /* Section wrap */
+    .section-wrap { padding:40px 16px; }
+
+    /* Actions buttons stack */
+    .actions { flex-direction:column; align-items:stretch; }
+    .actions .btn { justify-content:center; }
   }
 </style>
 </head>
@@ -249,6 +269,7 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 <script>
 var firebaseConfig = {
   apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
@@ -317,6 +338,9 @@ function doSubmit() {
     });
   }).then(function(docRef) {
     if (!docRef) return; // duplicate case
+    // Send push to admin
+    sendPushToAdmin(name, attend, attend === "yes" ? gcount : 0);
+
     document.getElementById("form-card").style.display = "none";
     var s = document.getElementById("success-box");
     s.classList.add("show");
@@ -365,6 +389,34 @@ var obs = new IntersectionObserver(function(entries) {
   });
 }, { threshold: 0.1 });
 document.querySelectorAll(".reveal").forEach(function(el) { obs.observe(el); });
+
+function sendPushToAdmin(name, attend, guests) {
+  // Get admin FCM token from Firestore and send via FCM REST API
+  db.collection('fcm_tokens').doc('admin').get().then(function(doc) {
+    if (!doc.exists) return;
+    var token = doc.data().token;
+    var title = attend === "yes"
+      ? "🎉 אישור הגעה חדש!"
+      : "❌ ביטול הגעה";
+    var body = attend === "yes"
+      ? name + " מגיע/ה עם " + guests + " אורחים"
+      : name + " לא יוכל/תוכל להגיע";
+
+    // Use Firebase Cloud Function (or direct FCM)
+    fetch("https://fcm.googleapis.com/fcm/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "key=YOUR_SERVER_KEY"
+      },
+      body: JSON.stringify({
+        to: token,
+        notification: { title: title, body: body }
+      })
+    }).catch(function() {}); // Silent fail - push is bonus feature
+  }).catch(function() {});
+}
+
 </script>
 </body>
 </html>
