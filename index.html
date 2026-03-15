@@ -73,6 +73,7 @@
   }
   .info-item:last-child { border-left:none; }
   .info-lbl { font-size:0.62rem; letter-spacing:0.2em; opacity:0.6; text-transform:uppercase; margin-bottom:0.35rem; }
+  .date-short { display: none; }
   .info-val { font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-style:italic; color:var(--gold-l); }
 
   /* SECTIONS */
@@ -199,6 +200,10 @@
     /* Section wrap */
     .section-wrap { padding:36px 16px; }
 
+    /* Date short/long */
+    .date-full  { display: none; }
+    .date-short { display: inline; }
+
     /* Actions buttons stack */
     .actions { flex-direction:column; align-items:stretch; }
     .actions .btn { justify-content:center; }
@@ -215,7 +220,7 @@
 
 <!-- INFO STRIP -->
 <div class="info-strip reveal">
-  <div class="info-item"><span class="info-lbl">תאריך</span><span class="info-val">שלישי, ח"י באייר (ל"ג בעומר)</span></div>
+  <div class="info-item"><span class="info-lbl">תאריך</span><span class="info-val"><span class="date-full">שלישי, ח"י באייר (ל"ג בעומר)</span><span class="date-short">ח"י באייר תשפ"ו</span></span></div>
   <div class="info-item"><span class="info-lbl">לועזי</span><span class="info-val">05.05.2026</span></div>
   <div class="info-item"><span class="info-lbl">חופה</span><span class="info-val">18:00</span></div>
   <div class="info-item"><span class="info-lbl">מיקום</span><span class="info-val">בית זלטה, כפר חב״ד</span></div>
