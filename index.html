@@ -247,11 +247,11 @@
   <a href="admin.html" style="display:inline-block;margin-top:1.8rem;font-size:0.55rem;color:rgba(232,237,245,0.1);text-decoration:none;letter-spacing:0.08em;" tabindex="-1" aria-hidden="true">✦</a>
 </footer>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+var firebaseConfig = {
   apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
   authDomain: "eliezer-yael-wedding.firebaseapp.com",
   projectId: "eliezer-yael-wedding",
@@ -259,97 +259,95 @@ const firebaseConfig = {
   messagingSenderId: "980359740134",
   appId: "1:980359740134:web:b9006d2d90fe71c9ce5927"
 };
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-
-const CFG = {
+var CFG = {
   brideName: "יעל",
   groomName: "אלעזר",
   dateGreg:  "05.05.2025",
   calDate:   "20250505",
   venue:     "בית זלטה, כפר חבד",
-  wazeQ:     "בית+זלטה+כפר+חבד",
+  wazeQ:     "בית+זלטה+כפר+חבד"
 };
 
-let attend = null;
-let gcount = 1;
+var attend = null;
+var gcount = 1;
 
-// ===== חשיפת פונקציות לHTML =====
-window.setAttend = function(v, btn) {
+function setAttend(v, btn) {
   attend = v;
-  document.querySelectorAll('.attend-btn').forEach(b => b.classList.remove('active-yes','active-no'));
-  btn.classList.add('active-' + v);
-  document.getElementById('guests-block').style.display = v === 'yes' ? 'block' : 'none';
-};
+  document.querySelectorAll(".attend-btn").forEach(function(b) {
+    b.classList.remove("active-yes", "active-no");
+  });
+  btn.classList.add("active-" + v);
+  document.getElementById("guests-block").style.display = v === "yes" ? "block" : "none";
+}
 
-window.chg = function(d) {
+function chg(d) {
   gcount = Math.max(1, Math.min(15, gcount + d));
-  document.getElementById('cnt').textContent = gcount;
-};
+  document.getElementById("cnt").textContent = gcount;
+}
 
-window.doSubmit = async function() {
-  const name  = document.getElementById('f-name').value.trim();
-  const phone = document.getElementById('f-phone').value.trim();
+function doSubmit() {
+  var name  = document.getElementById("f-name").value.trim();
+  var phone = document.getElementById("f-phone").value.trim();
 
-  if (!name)   { alert('אנא הזן/י שם מלא'); return; }
-  if (!attend) { alert('אנא בחר/י האם תגיע/י'); return; }
+  if (!name)   { alert("אנא הזן/י שם מלא"); return; }
+  if (!attend) { alert("אנא בחר/י האם תגיע/י"); return; }
 
-  const btn = document.querySelector('.submit-btn');
-  btn.textContent = 'שולח...';
+  var btn = document.querySelector(".submit-btn");
+  btn.textContent = "שולח...";
   btn.disabled = true;
 
-  try {
-    // בדיקת כפילות
-    const dupSnap = await getDocs(query(collection(db, 'rsvps'), where('name', '==', name)));
-    if (!dupSnap.empty) {
-      btn.textContent = 'שלח אישור הגעה ✦';
+  // בדיקת כפילות
+  db.collection("rsvps").where("name", "==", name).get().then(function(snap) {
+    if (!snap.empty) {
+      btn.textContent = "שלח אישור הגעה ✦";
       btn.disabled = false;
       showDuplicateMsg(name);
       return;
     }
 
     // שמירה
-    await addDoc(collection(db, 'rsvps'), {
-      name,
-      phone,
-      attend,
-      guests:    attend === 'yes' ? gcount : 0,
-      timestamp: new Date().toLocaleDateString('he-IL')
+    return db.collection("rsvps").add({
+      name: name,
+      phone: phone,
+      attend: attend,
+      guests: attend === "yes" ? gcount : 0,
+      timestamp: new Date().toLocaleDateString("he-IL")
     });
-
-    // הצלחה
-    document.getElementById('form-card').style.display = 'none';
-    const s = document.getElementById('success-box');
-    s.classList.add('show');
-    document.getElementById('s-head').textContent = attend === 'yes'
-      ? 'מעולה ' + name + '! 🎉'
-      : 'תודה ' + name + ' על ההודעה';
-    document.getElementById('s-body').textContent = attend === 'yes'
-      ? 'נשמח לראות אותך ב-' + CFG.dateGreg + ' בבית זלטה'
-      : 'חבל שלא תוכל/י, נחשוב עליך!';
-
-  } catch(e) {
-    console.error('Firestore error:', e);
-    btn.textContent = 'שלח אישור הגעה ✦';
+  }).then(function(docRef) {
+    if (!docRef) return; // duplicate case
+    document.getElementById("form-card").style.display = "none";
+    var s = document.getElementById("success-box");
+    s.classList.add("show");
+    document.getElementById("s-head").textContent = attend === "yes"
+      ? "מעולה " + name + "! 🎉"
+      : "תודה " + name + " על ההודעה";
+    document.getElementById("s-body").textContent = attend === "yes"
+      ? "נשמח לראות אותך ב-" + CFG.dateGreg + " בבית זלטה"
+      : "חבל שלא תוכל/י, נחשוב עליך!";
+  }).catch(function(e) {
+    console.error(e);
+    btn.textContent = "שלח אישור הגעה ✦";
     btn.disabled = false;
-    alert('אירעה שגיאה בשמירה. בדוק את החיבור לאינטרנט ונסה שוב.');
-  }
-};
-
-function showDuplicateMsg(name) {
-  const card = document.getElementById('form-card');
-  const old  = document.getElementById('dup-msg');
-  if (old) old.remove();
-  const msg = document.createElement('div');
-  msg.id = 'dup-msg';
-  msg.style.cssText = 'background:rgba(201,169,110,0.1);border:1.5px solid var(--gold);border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:var(--navy);font-size:0.9rem;text-align:center;line-height:1.5;';
-  msg.innerHTML = '<div style="font-size:1.4rem;margin-bottom:0.4rem">✦</div><strong>' + name + '</strong> — כבר קיים אישור הגעה עם השם הזה.<br><span style="opacity:0.7;font-size:0.82rem">אם יש שינוי, אנא צרו קשר ישירות.</span>';
-  card.insertBefore(msg, card.firstChild);
-  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    alert("שגיאה בשמירה: " + e.message);
+  });
 }
 
-window.saveDate = function() {
+function showDuplicateMsg(name) {
+  var card = document.getElementById("form-card");
+  var old  = document.getElementById("dup-msg");
+  if (old) old.remove();
+  var msg = document.createElement("div");
+  msg.id = "dup-msg";
+  msg.style.cssText = "background:rgba(201,169,110,0.1);border:1.5px solid var(--gold);border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:var(--navy);font-size:0.9rem;text-align:center;line-height:1.5;";
+  msg.innerHTML = "<div style='font-size:1.4rem;margin-bottom:0.4rem'>✦</div><strong>" + name + "</strong> — כבר קיים אישור הגעה עם השם הזה.<br><span style='opacity:0.7;font-size:0.82rem'>אם יש שינוי, אנא צרו קשר ישירות.</span>";
+  card.insertBefore(msg, card.firstChild);
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function saveDate() {
   var t = encodeURIComponent("חתונת " + CFG.groomName + " ו" + CFG.brideName);
   var l = encodeURIComponent(CFG.venue);
   var d = encodeURIComponent("חופה: 18:00 | לפני השקיעה | בית זלטה, כפר חבד");
@@ -359,16 +357,15 @@ window.saveDate = function() {
     "&location=" + l + "&details=" + d,
     "_blank"
   );
-};
+}
 
 // Scroll reveal
-const obs = new IntersectionObserver(function(entries) {
+var obs = new IntersectionObserver(function(entries) {
   entries.forEach(function(e) {
-    if (e.isIntersecting) e.target.classList.add('in');
+    if (e.isIntersecting) e.target.classList.add("in");
   });
 }, { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
-
+document.querySelectorAll(".reveal").forEach(function(el) { obs.observe(el); });
 </script>
 </body>
 </html>
