@@ -407,9 +407,9 @@
 </div>
 
 <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 var firebaseConfig = {
   apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
@@ -470,16 +470,26 @@ function loadAndRender() {
   db.collection("rsvps").get().then(function(snap) {
     rsvps = [];
     snap.forEach(function(d) {
-      rsvps.push(Object.assign({ id: d.id }, d.data()));
+      var data = d.data();
+      rsvps.push({
+        id:        d.id,
+        name:      data.name      || "",
+        phone:     data.phone     || "",
+        attend:    data.attend    || "",
+        guests:    data.guests    || 0,
+        timestamp: data.timestamp || ""
+      });
     });
     rsvps.sort(function(a, b) {
       return (b.timestamp || "").localeCompare(a.timestamp || "");
     });
+    console.log("Loaded", rsvps.length, "rsvps:", rsvps);
     renderStats();
     renderTable();
   }).catch(function(e) {
+    console.error("Firestore load error:", e);
     var wrap2 = document.getElementById("tbl-wrap");
-    if (wrap2) wrap2.innerHTML = "<div class='empty-state'><div class='ei'>❌</div><p>שגיאה: " + e.message + "</p></div>";
+    if (wrap2) wrap2.innerHTML = "<div class='empty-state'><div class='ei'>❌</div><p>שגיאה בטעינה: " + e.message + "</p></div>";
   });
 }
 
@@ -504,12 +514,15 @@ function filterTable(f, btn) {
 
 // ===== TABLE =====
 function renderTable() {
+  console.log("renderTable called, rsvps:", rsvps.length, "filter:", currentFilter);
   var filtered = currentFilter === "all"
     ? rsvps
     : rsvps.filter(function(r) { return r.attend === currentFilter; });
 
+  console.log("filtered:", filtered.length, "items:", JSON.stringify(filtered.slice(0,1)));
+
   var wrap = document.getElementById("tbl-wrap");
-  if (!wrap) return;
+  if (!wrap) { console.log("tbl-wrap not found!"); return; }
 
   if (!filtered.length) {
     wrap.innerHTML = "<div class='empty-state'><div class='ei'>📋</div><p>" +
