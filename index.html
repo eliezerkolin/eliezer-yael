@@ -25,9 +25,9 @@
 
   /* HERO */
   .hero {
-    min-height:100vh;
+    min-height:85vh;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    position:relative; overflow:hidden; padding:60px 24px; text-align:center;
+    position:relative; overflow:hidden; padding:40px 24px; text-align:center;
     background: linear-gradient(160deg, #e8edf5 0%, #f0f4f9 40%, #e2e9f2 100%);
   }
   .hero::before {
@@ -51,7 +51,7 @@
   }
 
   .scroll-hint {
-    margin-top:2.5rem;
+    margin-top:1.5rem;
     color:var(--navy);
     opacity:0;
     font-size:0.78rem;
@@ -67,7 +67,7 @@
   }
   .info-item {
     display:flex; flex-direction:column; align-items:center;
-    padding:1.5rem 2.2rem;
+    padding:0.9rem 1.8rem;
     border-left:1px solid rgba(255,255,255,0.1);
     color:var(--fog); min-width:130px;
   }
@@ -76,9 +76,9 @@
   .info-val { font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-style:italic; color:var(--gold-l); }
 
   /* SECTIONS */
-  .section-wrap { max-width:680px; margin:0 auto; padding:75px 24px; text-align:center; }
-  .sh { font-family:'Cormorant Garamond',serif; font-size:2.3rem; font-weight:300; font-style:italic; color:var(--navy); margin-bottom:0.5rem; }
-  .ss { font-size:0.75rem; letter-spacing:0.18em; color:var(--muted); text-transform:uppercase; margin-bottom:2.5rem; }
+  .section-wrap { max-width:680px; margin:0 auto; padding:40px 24px; text-align:center; }
+  .sh { font-family:'Cormorant Garamond',serif; font-size:2.3rem; font-weight:300; font-style:italic; color:var(--navy); margin-bottom:0.3rem; }
+  .ss { font-size:0.75rem; letter-spacing:0.18em; color:var(--muted); text-transform:uppercase; margin-bottom:1.5rem; }
 
   /* BUTTONS */
   .btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.85rem 2rem; border:none; cursor:pointer; font-family:'Alef',sans-serif; font-size:0.88rem; font-weight:700; letter-spacing:0.06em; border-radius:3px; transition:all 0.25s; text-decoration:none; }
@@ -91,30 +91,29 @@
   .actions { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; }
 
   /* DIVIDER */
-  .gold-line { width:70px; height:1.5px; background:var(--gold); margin:0 auto 2.5rem; opacity:0.6; }
+  .gold-line { width:70px; height:1.5px; background:var(--gold); margin:0 auto 1.5rem; opacity:0.6; }
 
   /* RSVP */
   .rsvp-bg {
-    background: linear-gradient(145deg, #eef1f7, #f5f7fb);
-    background-image: radial-gradient(ellipse at 80% 20%, rgba(201,169,110,0.1) 0%, transparent 50%);
+    background: #f2f5fa;
   }
   .rsvp-bg .sh { color: var(--navy); }
   .rsvp-bg .ss { color: var(--navy); opacity: 0.6; }
 
-  .rsvp-card { background:white; border:1px solid rgba(30,45,80,0.12); border-radius:6px; padding:2.5rem; box-shadow:0 4px 30px rgba(30,45,80,0.08); text-align:right; }
+  .rsvp-card { background:white; border:1px solid rgba(30,45,80,0.12); border-radius:6px; padding:1.5rem; box-shadow:0 4px 30px rgba(30,45,80,0.08); text-align:right; }
   .form-label { display:block; font-size:0.7rem; letter-spacing:0.14em; color:var(--navy); text-transform:uppercase; margin-bottom:0.45rem; font-weight:700; }
-  .form-input { width:100%; padding:0.85rem 1rem; border:1.5px solid var(--fog-d); background:var(--fog); font-family:'Alef',sans-serif; font-size:0.95rem; color:var(--navy); border-radius:3px; outline:none; transition:border-color 0.2s; margin-bottom:1.2rem; }
+  .form-input { width:100%; padding:0.85rem 1rem; border:1.5px solid var(--fog-d); background:var(--fog); font-family:'Alef',sans-serif; font-size:0.95rem; color:var(--navy); border-radius:3px; outline:none; transition:border-color 0.2s; margin-bottom:0.8rem; }
   .form-input:focus { border-color:var(--gold); background:white; }
   .form-input::placeholder { color:rgba(30,45,80,0.4); }
   .form-input option { background:#1e2d50; }
 
-  .attend-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1.2rem; }
+  .attend-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:0.8rem; }
   .attend-btn { padding:1rem; border:1.5px solid var(--fog-d); background:var(--fog); cursor:pointer; font-family:'Alef',sans-serif; font-size:0.9rem; color:var(--navy); border-radius:3px; transition:all 0.22s; text-align:center; }
   .attend-btn:hover { border-color:var(--gold); color:var(--gold-l); }
   .active-yes { background:rgba(201,169,110,0.2) !important; border-color:var(--gold) !important; color:var(--gold-l) !important; }
   .active-no  { background:rgba(120,50,50,0.3) !important; border-color:#c07070 !important; color:#f0b0b0 !important; }
 
-  .counter-wrap { display:flex; align-items:center; gap:1rem; background:var(--fog); border:1.5px solid var(--fog-d); padding:0.6rem 1rem; border-radius:3px; margin-bottom:1.2rem; }
+  .counter-wrap { display:flex; align-items:center; gap:1rem; background:var(--fog); border:1.5px solid var(--fog-d); padding:0.6rem 1rem; border-radius:3px; margin-bottom:0.8rem; }
   .counter-lbl { flex:1; font-size:0.82rem; color:var(--navy); opacity:0.7; }
   .c-btn { width:34px; height:34px; border:1.5px solid rgba(201,169,110,0.3); background:white; color:var(--navy); cursor:pointer; font-size:1.1rem; border-radius:3px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; font-family:monospace; }
   .c-btn:hover { background:var(--gold); color:white; border-color:var(--gold); }
@@ -126,7 +125,7 @@
   .success-box { display:none; text-align:center; padding:3.5rem 2rem; background:white; border-radius:6px; box-shadow:0 4px 30px rgba(30,45,80,0.08); }
   .success-box.show { display:block; }
   .success-icon { font-size:3rem; margin-bottom:1rem; }
-  .success-box h3 { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-style:italic; color:var(--navy); margin-bottom:0.5rem; }
+  .success-box h3 { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-style:italic; color:var(--navy); margin-bottom:0.3rem; }
   .success-box p { color:var(--muted); font-size:0.95rem; }
 
   /* ADMIN */
@@ -153,7 +152,7 @@
   .empty { text-align:center; padding:3rem; color:var(--muted); font-style:italic; }
 
   /* FOOTER */
-  footer { background:var(--navy-d); color:rgba(232,237,245,0.55); text-align:center; padding:2.5rem; font-size:0.78rem; letter-spacing:0.12em; }
+  footer { background:var(--navy-d); color:rgba(232,237,245,0.55); text-align:center; padding:1.5rem; font-size:0.78rem; letter-spacing:0.12em; }
   footer .fn { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-style:italic; color:var(--gold-l); display:block; margin-bottom:0.4rem; }
 
   /* REVEAL */
@@ -181,8 +180,8 @@
 
 <!-- INFO STRIP -->
 <div class="info-strip reveal">
-  <div class="info-item"><span class="info-lbl">תאריך</span><span class="info-val">שלישי, ח׳׳י אייר</span></div>
-  <div class="info-item"><span class="info-lbl">לועזי</span><span class="info-val">05.05.2025</span></div>
+  <div class="info-item"><span class="info-lbl">תאריך</span><span class="info-val">שני, ח׳׳י אייר</span></div>
+  <div class="info-item"><span class="info-lbl">לועזי</span><span class="info-val">05.05.2026</span></div>
   <div class="info-item"><span class="info-lbl">חופה</span><span class="info-val">18:00</span></div>
   <div class="info-item"><span class="info-lbl">מיקום</span><span class="info-val">בית זלטה, כפר חב״ד</span></div>
 </div>
@@ -242,7 +241,7 @@
 
 <footer>
   <span class="fn">אלעזר &amp; יעל</span>
-  ה׳׳י אייר תשפ״ה &nbsp;·&nbsp; 05.05.2025 &nbsp;·&nbsp; בית זלטה, כפר חב״ד
+  ה׳׳י אייר תשפ״ה &nbsp;·&nbsp; 05.05.2026 &nbsp;·&nbsp; בית זלטה, כפר חב״ד
   <br>
   <a href="admin.html" style="display:inline-block;margin-top:1.8rem;font-size:0.55rem;color:rgba(232,237,245,0.1);text-decoration:none;letter-spacing:0.08em;" tabindex="-1" aria-hidden="true">✦</a>
 </footer>
@@ -265,8 +264,8 @@ var db = firebase.firestore();
 var CFG = {
   brideName: "יעל",
   groomName: "אלעזר",
-  dateGreg:  "05.05.2025",
-  calDate:   "20250505",
+  dateGreg:  "05.05.2026",
+  calDate:   "20260505",
   venue:     "בית זלטה, כפר חבד",
   wazeQ:     "בית+זלטה+כפר+חבד"
 };
