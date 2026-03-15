@@ -288,10 +288,10 @@
     .admin-header { flex-direction: column; gap: 0.8rem; text-align: center; }
     .table-header { flex-direction: column; }
     .filter-tabs { flex-wrap: wrap; }
-    thead { display: none; }
-    tbody tr { display: block; padding: 0.8rem; border-bottom: 2px solid var(--fog); }
-    tbody td { display: flex; justify-content: space-between; padding: 0.3rem 0; border: none; font-size: 0.85rem; }
-    tbody td::before { content: attr(data-label); color: var(--muted); font-size: 0.7rem; }
+    .table-section { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { min-width: 520px; font-size: 0.78rem; }
+    thead th { padding: 0.6rem 0.6rem; }
+    tbody td { padding: 0.6rem 0.6rem; }
   }
 
   .google-btn {
@@ -331,6 +331,106 @@
     animation: spin 0.8s linear infinite;
     display: inline-block;
   }
+
+  /* PERMISSIONS */
+  .perm-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 20px rgba(30,45,80,0.07);
+    overflow: hidden;
+    margin-top: 1.5rem;
+  }
+  .perm-header {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--fog);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .perm-title { font-weight: 700; color: var(--navy); font-size: 1rem; }
+  .perm-body { padding: 1.5rem; }
+  .perm-add-row {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .perm-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.7rem 1rem;
+    border: 1.5px solid var(--fog-d);
+    background: var(--fog);
+    font-family: 'Alef', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    border-radius: 4px;
+    outline: none;
+    direction: ltr;
+    text-align: left;
+    transition: border-color 0.2s;
+  }
+  .perm-input:focus { border-color: var(--navy); background: white; }
+  .perm-add-btn {
+    padding: 0.7rem 1.5rem;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Alef', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .perm-add-btn:hover { background: var(--navy-m); transform: translateY(-1px); }
+  .perm-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .perm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--fog);
+    border-radius: 4px;
+    border: 1px solid var(--fog-d);
+  }
+  .perm-email {
+    font-family: monospace;
+    font-size: 0.88rem;
+    color: var(--navy);
+    direction: ltr;
+    text-align: left;
+  }
+  .perm-owner-badge {
+    font-size: 0.7rem;
+    background: rgba(45,63,107,0.12);
+    color: var(--navy);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    margin-right: 0.5rem;
+  }
+  .perm-del-btn {
+    background: none;
+    border: none;
+    color: #c07070;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+  .perm-del-btn:hover { background: rgba(180,80,80,0.1); }
+  .perm-msg {
+    font-size: 0.8rem;
+    padding: 0.5rem 0;
+    min-height: 1.5rem;
+  }
+  .perm-msg.ok  { color: #2a7a4a; }
+  .perm-msg.err { color: #b44; }
+  .perm-empty { color: var(--muted); font-style: italic; font-size: 0.85rem; padding: 0.5rem 0; }
 </style>
 </head>
 <body>
@@ -403,6 +503,23 @@
       <div id="tbl-wrap"></div>
     </div>
 
+  <!-- PERMISSIONS -->
+    <div class="perm-section">
+      <div class="perm-header">
+        <span class="perm-title">🔐 ניהול הרשאות כניסה</span>
+      </div>
+      <div class="perm-body">
+        <div class="perm-add-row">
+          <input class="perm-input" type="email" id="perm-email-input" placeholder="הכנס כתובת אימייל..." onkeydown="if(event.key==='Enter') addPermission()" />
+          <button class="perm-add-btn" onclick="addPermission()">+ הוסף הרשאה</button>
+        </div>
+        <p class="perm-msg" id="perm-msg"></p>
+        <div class="perm-list" id="perm-list">
+          <p class="perm-empty">טוען...</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -425,28 +542,40 @@ var db   = firebase.firestore();
 var auth = firebase.auth();
 var provider = new firebase.auth.GoogleAuthProvider();
 
-var ALLOWED_EMAILS = ["eliezerkolin@gmail.com"];
+var OWNER_EMAIL = "eliezerkolin@gmail.com"; // ← המייל הראשי — לא ניתן למחיקה
+var ALLOWED_EMAILS = [OWNER_EMAIL]; // יתעדכן מ-Firestore
 var rsvps = [];
 var currentFilter = "all";
 
 // ===== AUTH STATE =====
 auth.onAuthStateChanged(function(user) {
-  if (user && ALLOWED_EMAILS.includes(user.email.toLowerCase())) {
-    document.getElementById("login-page").style.display  = "none";
-    document.getElementById("admin-page").style.display  = "block";
-    document.getElementById("user-email").textContent    = user.email;
-    loadAndRender();
-  } else if (user) {
-    auth.signOut();
-    document.getElementById("denied-email").textContent    = user.email;
-    document.getElementById("access-denied").style.display = "block";
-    document.getElementById("login-main").style.display    = "none";
-  } else {
+  if (!user) {
     document.getElementById("login-page").style.display    = "flex";
     document.getElementById("admin-page").style.display    = "none";
     document.getElementById("access-denied").style.display = "none";
     document.getElementById("login-main").style.display    = "block";
+    return;
   }
+  // Check both static list and Firestore admins collection
+  db.collection("admins").get().then(function(snap) {
+    var allowed = [OWNER_EMAIL];
+    snap.forEach(function(d) { allowed.push(d.data().email.toLowerCase()); });
+    ALLOWED_EMAILS = allowed;
+
+    if (allowed.includes(user.email.toLowerCase())) {
+      document.getElementById("login-page").style.display  = "none";
+      document.getElementById("admin-page").style.display  = "block";
+      document.getElementById("user-email").textContent    = user.email;
+      loadAndRender();
+      loadPermissions();
+    } else {
+      auth.signOut();
+      document.getElementById("denied-email").textContent    = user.email;
+      document.getElementById("access-denied").style.display = "block";
+      document.getElementById("login-main").style.display    = "none";
+    }
+  });
+
 });
 
 function signInWithGoogle() {
@@ -604,6 +733,91 @@ function exportCSV() {
   a.download = "אורחים_אלעזר_ויעל.csv";
   a.click();
 }
+
+
+// ===== PERMISSIONS =====
+function loadPermissions() {
+  var list = document.getElementById("perm-list");
+  if (!list) return;
+
+  db.collection("admins").get().then(function(snap) {
+    var emails = [];
+    snap.forEach(function(d) { emails.push({ id: d.id, email: d.data().email }); });
+
+    // Sync ALLOWED_EMAILS
+    ALLOWED_EMAILS = [OWNER_EMAIL];
+    emails.forEach(function(e) {
+      if (!ALLOWED_EMAILS.includes(e.email.toLowerCase())) {
+        ALLOWED_EMAILS.push(e.email.toLowerCase());
+      }
+    });
+
+    renderPermissions(emails);
+  }).catch(function(e) {
+    console.error("loadPermissions error:", e);
+  });
+}
+
+function renderPermissions(emails) {
+  var list = document.getElementById("perm-list");
+  if (!list) return;
+
+  var html = '<div class="perm-item">' +
+    '<span class="perm-email">' + OWNER_EMAIL + '</span>' +
+    '<span class="perm-owner-badge">בעלים</span>' +
+    '</div>';
+
+  if (emails.length === 0) {
+    html += '<p class="perm-empty">אין מורשים נוספים</p>';
+  } else {
+    emails.forEach(function(item) {
+      if (item.email.toLowerCase() === OWNER_EMAIL) return;
+      html += '<div class="perm-item">' +
+        '<span class="perm-email">' + item.email + '</span>' +
+        '<button class="perm-del-btn" onclick="removePermission('' + item.id + '', '' + item.email + '')" title="הסר הרשאה">🗑</button>' +
+        '</div>';
+    });
+  }
+
+  list.innerHTML = html;
+}
+
+function addPermission() {
+  var input = document.getElementById("perm-email-input");
+  var msg   = document.getElementById("perm-msg");
+  var email = input.value.trim().toLowerCase();
+
+  if (!email) { showPermMsg("אנא הכנס כתובת אימייל", "err"); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showPermMsg("כתובת אימייל לא תקינה", "err"); return; }
+  if (ALLOWED_EMAILS.includes(email)) { showPermMsg("המייל כבר קיים ברשימה", "err"); return; }
+
+  db.collection("admins").add({ email: email }).then(function() {
+    input.value = "";
+    showPermMsg("✓ " + email + " נוסף בהצלחה", "ok");
+    loadPermissions();
+  }).catch(function(e) {
+    showPermMsg("שגיאה: " + e.message, "err");
+  });
+}
+
+function removePermission(id, email) {
+  if (!confirm("להסיר הרשאה מ-" + email + "?")) return;
+  db.collection("admins").doc(id).delete().then(function() {
+    showPermMsg("✓ הוסרה הרשאה מ-" + email, "ok");
+    loadPermissions();
+  }).catch(function(e) {
+    showPermMsg("שגיאה: " + e.message, "err");
+  });
+}
+
+function showPermMsg(text, type) {
+  var msg = document.getElementById("perm-msg");
+  if (!msg) return;
+  msg.textContent = text;
+  msg.className = "perm-msg " + type;
+  setTimeout(function() { msg.textContent = ""; msg.className = "perm-msg"; }, 4000);
+}
+
 </script>
 </body>
 </html>
