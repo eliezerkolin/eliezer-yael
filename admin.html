@@ -517,22 +517,35 @@ function renderTable() {
     return;
   }
 
-  var rows = filtered.map(function(r, i) {
-    var phone  = r.phone ? "<a href='tel:" + r.phone + "' style='color:var(--navy-m);text-decoration:none'>" + r.phone + "</a>" : "—";
-    var badge  = r.attend === "yes" ? "<span class='badge b-yes'>✓ מגיע/ה</span>" : "<span class='badge b-no'>✗ לא מגיע/ה</span>";
+  var html = "<table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th></tr></thead><tbody>";
+
+  filtered.forEach(function(r, i) {
+    var phone  = r.phone ? r.phone : "—";
+    var badge  = r.attend === "yes" ? "מגיע/ה" : "לא מגיע/ה";
+    var bClass = r.attend === "yes" ? "b-yes" : "b-no";
     var guests = r.attend === "yes" ? (r.guests || 1) : "—";
-    return "<tr>" +
-      "<td>" + (i+1) + "</td>" +
-      "<td><strong>" + r.name + "</strong></td>" +
-      "<td>" + phone + "</td>" +
-      "<td>" + badge + "</td>" +
-      "<td>" + guests + "</td>" +
-      "<td style='color:var(--muted);font-size:0.8rem'>" + (r.timestamp || "") + "</td>" +
-      "<td><button onclick="deleteRSVP('" + r.id + "')" style='background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem'>🗑</button></td>" +
-      "</tr>";
+    var ts     = r.timestamp || "";
+
+    html += "<tr>";
+    html += "<td>" + (i+1) + "</td>";
+    html += "<td><strong>" + r.name + "</strong></td>";
+    html += "<td>" + phone + "</td>";
+    html += "<td><span class='badge " + bClass + "'>" + badge + "</span></td>";
+    html += "<td>" + guests + "</td>";
+    html += "<td style='color:var(--muted);font-size:0.8rem'>" + ts + "</td>";
+    html += "<td><button data-id='" + r.id + "' class='del-btn' style='background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem'>🗑</button></td>";
+    html += "</tr>";
   });
 
-  wrap.innerHTML = "<table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th></tr></thead><tbody>" + rows.join("") + "</tbody></table>";
+  html += "</tbody></table>";
+  wrap.innerHTML = html;
+
+  // Attach delete listeners safely
+  wrap.querySelectorAll(".del-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      deleteRSVP(this.getAttribute("data-id"));
+    });
+  });
 }
 
 // ===== DELETE =====
