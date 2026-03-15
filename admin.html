@@ -407,9 +407,9 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs, deleteDoc, doc, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
@@ -420,10 +420,7 @@ const firebaseConfig = {
   appId: "1:980359740134:web:b9006d2d90fe71c9ce5927"
 };
 
-const ALLOWED_EMAILS = [
-  'eliezerkolin@gmail.com',
-  // הוסף מיילים נוספים כאן אם תצטרך
-];
+const ALLOWED_EMAILS = ["eliezerkolin@gmail.com"];
 
 const app      = initializeApp(firebaseConfig);
 const db       = getFirestore(app);
@@ -431,193 +428,171 @@ const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 let rsvps = [];
-let currentFilter = 'all';
+let currentFilter = "all";
 
-// ===== AUTH STATE =====
-onAuthStateChanged(auth, user => {
-  if (user && ALLOWED_EMAILS.includes(user.email)) {
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('admin-page').style.display = 'block';
-    document.getElementById('user-email').textContent   = user.email;
+// ===== AUTH =====
+onAuthStateChanged(auth, function(user) {
+  if (user && ALLOWED_EMAILS.includes(user.email.toLowerCase())) {
+    document.getElementById("login-page").style.display  = "none";
+    document.getElementById("admin-page").style.display  = "block";
+    document.getElementById("user-email").textContent    = user.email;
     loadAndRender();
-  } else if (user && !ALLOWED_EMAILS.includes(user.email)) {
-    // התחבר עם מייל לא מורשה
+  } else if (user) {
     signOut(auth);
-    showError('המייל ' + user.email + ' אינו מורשה לגשת לפאנל זה');
+    document.getElementById("denied-email").textContent     = user.email;
+    document.getElementById("access-denied").style.display  = "block";
+    document.getElementById("login-main").style.display     = "none";
   } else {
-    document.getElementById('login-page').style.display = 'flex';
-    document.getElementById('admin-page').style.display = 'none';
+    document.getElementById("login-page").style.display  = "flex";
+    document.getElementById("admin-page").style.display  = "none";
+    document.getElementById("access-denied").style.display = "none";
+    document.getElementById("login-main").style.display  = "block";
   }
 });
 
-// ===== GOOGLE LOGIN =====
-window.doGoogleLogin = async function() {
-  const btn = document.getElementById('google-btn');
-  const err = document.getElementById('login-err');
-  err.style.display = 'none';
-  btn.disabled      = true;
-  btn.innerHTML     = '<span class="g-spinner"></span> מתחבר...';
-
+window.signInWithGoogle = async function() {
   try {
+    provider.setCustomParameters({ prompt: "select_account" });
     await signInWithPopup(auth, provider);
-    // onAuthStateChanged יטפל במעבר
   } catch(e) {
-    btn.disabled  = false;
-    btn.innerHTML = googleBtnHTML;
-    if (e.code === 'auth/popup-closed-by-user') return;
-    showError('שגיאה בהתחברות, נסה שוב');
+    if (e.code !== "auth/popup-closed-by-user") {
+      alert("שגיאה בהתחברות, נסה שוב");
+    }
   }
 };
 
-function showError(msg) {
-  const err       = document.getElementById('login-err');
-  err.textContent = msg;
-  err.style.display = 'block';
-}
-
-const googleBtnHTML = `<svg width="20" height="20" viewBox="0 0 48 48" style="margin-left:0.5rem">
-  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-  <path fill="none" d="M0 0h48v48H0z"/>
-</svg>
-התחבר עם Google`;
-
-// ===== LOGOUT =====
 window.logout = async function() {
   await signOut(auth);
 };
 
-// ===== LOAD DATA =====
+// ===== LOAD =====
 async function loadAndRender() {
-  setLoading(true);
+  var wrap = document.getElementById("tbl-wrap");
+  if (wrap) {
+    wrap.innerHTML = "<div class=\"empty-state\"><div class=\"ei\" style=\"animation:spin 1s linear infinite;display:inline-block\">⏳</div><p>טוען נתונים...</p></div>";
+  }
+
   try {
-    const snap = await getDocs(query(collection(db, 'rsvps')));
-    rsvps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    rsvps.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    var snap = await getDocs(collection(db, "rsvps"));
+    rsvps = snap.docs.map(function(d) {
+      return Object.assign({ id: d.id }, d.data());
+    });
+    rsvps.sort(function(a, b) {
+      return (b.timestamp || "").localeCompare(a.timestamp || "");
+    });
   } catch(e) {
-    document.getElementById('tbl-wrap').innerHTML =
-      '<div class="empty-state"><div class="ei">❌</div><p>שגיאה בטעינת הנתונים</p></div>';
-    setLoading(false);
+    console.error("Firestore error:", e);
+    var wrap2 = document.getElementById("tbl-wrap");
+    if (wrap2) wrap2.innerHTML = "<div class=\"empty-state\"><div class=\"ei\">❌</div><p>שגיאה בטעינת הנתונים: " + e.message + "</p></div>";
     return;
   }
-  setLoading(false);
+
   renderStats();
   renderTable();
 }
 
-function setLoading(on) {
-  if (on) document.getElementById('tbl-wrap').innerHTML =
-    '<div class="empty-state"><div class="ei" style="animation:spin 1s linear infinite;display:inline-block">⏳</div><p>טוען נתונים...</p></div>';
-}
-
 // ===== STATS =====
 function renderStats() {
-  const yes   = rsvps.filter(r => r.attend === 'yes');
-  const no    = rsvps.filter(r => r.attend !== 'yes');
-  const total = yes.reduce((s, r) => s + (Number(r.guests) || 1), 0);
-  document.getElementById('s-yes').textContent   = yes.length;
-  document.getElementById('s-no').textContent    = no.length;
-  document.getElementById('s-total').textContent = total;
-  document.getElementById('s-all').textContent   = rsvps.length;
+  var yes   = rsvps.filter(function(r) { return r.attend === "yes"; });
+  var no    = rsvps.filter(function(r) { return r.attend !== "yes"; });
+  var total = yes.reduce(function(s, r) { return s + (Number(r.guests) || 1); }, 0);
+  document.getElementById("s-yes").textContent   = yes.length;
+  document.getElementById("s-no").textContent    = no.length;
+  document.getElementById("s-total").textContent = total;
+  document.getElementById("s-all").textContent   = rsvps.length;
 }
 
 // ===== FILTER =====
 window.filterTable = function(f, btn) {
   currentFilter = f;
-  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll(".ftab").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
   renderTable();
 };
 
 // ===== TABLE =====
 function renderTable() {
-  const filtered = currentFilter === 'all'
+  var filtered = currentFilter === "all"
     ? rsvps
-    : rsvps.filter(r => r.attend === currentFilter);
+    : rsvps.filter(function(r) { return r.attend === currentFilter; });
 
-  const wrap = document.getElementById('tbl-wrap');
+  var wrap = document.getElementById("tbl-wrap");
+  if (!wrap) return;
+
   if (!filtered.length) {
-    wrap.innerHTML = `<div class="empty-state"><div class="ei">📋</div>
-      <p>${rsvps.length ? 'אין תוצאות לפילטר זה' : 'אין אישורי הגעה עדיין'}</p></div>`;
+    wrap.innerHTML = "<div class=\"empty-state\"><div class=\"ei\">📋</div><p>" +
+      (rsvps.length ? "אין תוצאות לפילטר זה" : "אין אישורי הגעה עדיין") + "</p></div>";
     return;
   }
 
-  wrap.innerHTML = `
-    <table>
-      <thead><tr>
-        <th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th>
-      </tr></thead>
-      <tbody>
-        ${filtered.map((r, i) => `
-          <tr id="row-${r.id}">
-            <td data-label="#">${i + 1}</td>
-            <td data-label="שם"><strong>${r.name}</strong></td>
-            <td data-label="טלפון">${r.phone
-              ? `<a href="tel:${r.phone}" style="color:var(--navy-m);text-decoration:none">${r.phone}</a>`
-              : '—'}</td>
-            <td data-label="מגיע?">
-              <span class="badge ${r.attend === 'yes' ? 'b-yes' : 'b-no'}">
-                ${r.attend === 'yes' ? '✓ מגיע/ה' : '✗ לא מגיע/ה'}
-              </span>
-            </td>
-            <td data-label="אורחים">${r.attend === 'yes' ? (r.guests || 1) : '—'}</td>
-            <td data-label="תאריך" style="color:var(--muted);font-size:0.8rem">${r.timestamp || ''}</td>
-            <td>
-              <button onclick="deleteRSVP('${r.id}')"
-                style="background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem;padding:0.2rem 0.5rem"
-                title="מחק רשומה">🗑</button>
-            </td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
+  var rows = filtered.map(function(r, i) {
+    var phone = r.phone
+      ? "<a href=\"tel:" + r.phone + "\" style=\"color:var(--navy-m);text-decoration:none\">" + r.phone + "</a>"
+      : "—";
+    var badge = r.attend === "yes"
+      ? "<span class=\"badge b-yes\">✓ מגיע/ה</span>"
+      : "<span class=\"badge b-no\">✗ לא מגיע/ה</span>";
+    var guests = r.attend === "yes" ? (r.guests || 1) : "—";
+    return "<tr id=\"row-" + r.id + "\">" +
+      "<td data-label='#'>" + (i+1) + "</td>" +
+      "<td data-label='שם'><strong>" + r.name + "</strong></td>" +
+      "<td data-label='טלפון'>" + phone + "</td>" +
+      "<td data-label='מגיע?'>" + badge + "</td>" +
+      "<td data-label='אורחים'>" + guests + "</td>" +
+      "<td data-label='תאריך' style='color:var(--muted);font-size:0.8rem'>" + (r.timestamp||"") + "</td>" +
+      "<td><button onclick=\"deleteRSVP('" + r.id + "')\" style=\"background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem;padding:0.2rem 0.5rem\" title='מחק'>🗑</button></td>" +
+      "</tr>";
+  });
+
+  wrap.innerHTML = "<table><thead><tr>" +
+    "<th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th>" +
+    "</tr></thead><tbody>" + rows.join("") + "</tbody></table>";
 }
 
 // ===== DELETE =====
 window.deleteRSVP = async function(id) {
-  if (!confirm('למחוק את הרשומה?')) return;
+  if (!confirm("למחוק את הרשומה?")) return;
   try {
-    await deleteDoc(doc(db, 'rsvps', id));
-    rsvps = rsvps.filter(r => r.id !== id);
+    await deleteDoc(doc(db, "rsvps", id));
+    rsvps = rsvps.filter(function(r) { return r.id !== id; });
     renderStats();
     renderTable();
   } catch(e) {
-    alert('שגיאה במחיקה');
+    alert("שגיאה במחיקה: " + e.message);
   }
 };
 
 // ===== REFRESH =====
 window.refreshData = async function() {
-  const btn = document.getElementById('refresh-btn');
-  btn.textContent = '⏳ מרענן...';
+  var btn = document.getElementById("refresh-btn");
+  btn.textContent = "⏳ מרענן...";
   btn.disabled    = true;
   await loadAndRender();
-  btn.textContent = '🔄 רענן';
+  btn.textContent = "🔄 רענן";
   btn.disabled    = false;
 };
 
-// ===== EXPORT CSV =====
+// ===== EXPORT =====
 window.exportCSV = function() {
-  const rows = [['שם', 'טלפון', 'מגיע', 'מספר אורחים', 'תאריך אישור']];
-  rsvps.forEach(r => rows.push([
-    r.name, r.phone || '',
-    r.attend === 'yes' ? 'כן' : 'לא',
-    r.attend === 'yes' ? (r.guests || 1) : 0,
-    r.timestamp || ''
-  ]));
-  const csv = '\uFEFF' + rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const a   = document.createElement('a');
-  a.href    = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-  a.download = `אורחים_אלעזר_ויעל_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.csv`;
+  var rows = [["שם","טלפון","מגיע","מספר אורחים","תאריך אישור"]];
+  rsvps.forEach(function(r) {
+    rows.push([
+      r.name,
+      r.phone || "",
+      r.attend === "yes" ? "כן" : "לא",
+      r.attend === "yes" ? (r.guests || 1) : 0,
+      r.timestamp || ""
+    ]);
+  });
+  var csv = "﻿" + rows.map(function(r) {
+    return r.map(function(c) { return '"' + c + '"'; }).join(",");
+  }).join("
+");
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  a.download = "אורחים_אלעזר_ויעל.csv";
   a.click();
 };
-
-// Init google button HTML after DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('google-btn');
-  if (btn) btn.innerHTML = googleBtnHTML;
-});
 </script>
 </body>
 </html>
