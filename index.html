@@ -266,20 +266,20 @@ const db  = getFirestore(app);
 const CFG = {
   brideName: 'יעל',
   groomName: 'אלעזר',
-  dateHeb:   'שלישי, ח''י אייר תשפ"ה',
   dateGreg:  '05.05.2025',
   calDate:   '20250505',
   venue:     'בית זלטה, כפר חב"ד ב'',
   wazeQ:     'בית+זלטה+כפר+חבד',
 };
 
-let attend = null, gcount = 1;
+let attend = null;
+let gcount = 1;
 
-// ===== FORM =====
+// ===== חשיפת פונקציות לHTML =====
 window.setAttend = function(v, btn) {
   attend = v;
   document.querySelectorAll('.attend-btn').forEach(b => b.classList.remove('active-yes','active-no'));
-  btn.classList.add(`active-${v}`);
+  btn.classList.add('active-' + v);
   document.getElementById('guests-block').style.display = v === 'yes' ? 'block' : 'none';
 };
 
@@ -291,6 +291,7 @@ window.chg = function(d) {
 window.doSubmit = async function() {
   const name  = document.getElementById('f-name').value.trim();
   const phone = document.getElementById('f-phone').value.trim();
+
   if (!name)   { alert('אנא הזן/י שם מלא'); return; }
   if (!attend) { alert('אנא בחר/י האם תגיע/י'); return; }
 
@@ -299,10 +300,8 @@ window.doSubmit = async function() {
   btn.disabled = true;
 
   try {
-    // בדיקת כפילות לפי שם
-    const dupQuery = query(collection(db, 'rsvps'), where('name', '==', name));
-    const dupSnap  = await getDocs(dupQuery);
-
+    // בדיקת כפילות
+    const dupSnap = await getDocs(query(collection(db, 'rsvps'), where('name', '==', name)));
     if (!dupSnap.empty) {
       btn.textContent = 'שלח אישור הגעה ✦';
       btn.disabled = false;
@@ -310,7 +309,7 @@ window.doSubmit = async function() {
       return;
     }
 
-    // שמירה ב-Firestore
+    // שמירה
     await addDoc(collection(db, 'rsvps'), {
       name,
       phone,
@@ -324,17 +323,17 @@ window.doSubmit = async function() {
     const s = document.getElementById('success-box');
     s.classList.add('show');
     document.getElementById('s-head').textContent = attend === 'yes'
-      ? `מעולה ${name}! 🎉`
-      : `תודה ${name} על ההודעה`;
+      ? 'מעולה ' + name + '! 🎉'
+      : 'תודה ' + name + ' על ההודעה';
     document.getElementById('s-body').textContent = attend === 'yes'
-      ? `נשמח לראות אותך ב-${CFG.dateGreg} בבית זלטה`
+      ? 'נשמח לראות אותך ב-' + CFG.dateGreg + ' בבית זלטה'
       : 'חבל שלא תוכל/י, נחשוב עליך!';
 
   } catch(e) {
-    console.error(e);
+    console.error('Firestore error:', e);
     btn.textContent = 'שלח אישור הגעה ✦';
     btn.disabled = false;
-    alert('אירעה שגיאה, אנא נסה שוב');
+    alert('אירעה שגיאה בשמירה. בדוק את החיבור לאינטרנט ונסה שוב.');
   }
 };
 
@@ -344,32 +343,32 @@ function showDuplicateMsg(name) {
   if (old) old.remove();
   const msg = document.createElement('div');
   msg.id = 'dup-msg';
-  msg.style.cssText = `
-    background:rgba(201,169,110,0.1); border:1.5px solid var(--gold);
-    border-radius:4px; padding:1rem 1.2rem; margin-bottom:1.2rem;
-    color:var(--navy); font-size:0.9rem; text-align:center; line-height:1.5;
-  `;
-  msg.innerHTML = `
-    <div style="font-size:1.4rem;margin-bottom:0.4rem">✦</div>
-    <strong>${name}</strong> — כבר קיים אישור הגעה עם השם הזה.<br>
-    <span style="opacity:0.7;font-size:0.82rem">אם יש שינוי, אנא צרו קשר ישירות.</span>
-  `;
+  msg.style.cssText = 'background:rgba(201,169,110,0.1);border:1.5px solid var(--gold);border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:var(--navy);font-size:0.9rem;text-align:center;line-height:1.5;';
+  msg.innerHTML = '<div style="font-size:1.4rem;margin-bottom:0.4rem">✦</div><strong>' + name + '</strong> — כבר קיים אישור הגעה עם השם הזה.<br><span style="opacity:0.7;font-size:0.82rem">אם יש שינוי, אנא צרו קשר ישירות.</span>';
   card.insertBefore(msg, card.firstChild);
-  card.scrollIntoView({ behavior:'smooth', block:'start' });
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 window.saveDate = function() {
-  const t = encodeURIComponent(`חתונת ${CFG.groomName} ו${CFG.brideName}`);
+  const t = encodeURIComponent('חתונת ' + CFG.groomName + ' ו' + CFG.brideName);
   const l = encodeURIComponent(CFG.venue);
   const d = encodeURIComponent('חופה: 18:00 | לפני השקיעה | בית זלטה, כפר חב"ד ב'');
-  window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${t}&dates=${CFG.calDate}T160000/${CFG.calDate}T235900&location=${l}&details=${d}`, '_blank');
+  window.open(
+    'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + t +
+    '&dates=' + CFG.calDate + 'T160000/' + CFG.calDate + 'T235900' +
+    '&location=' + l + '&details=' + d,
+    '_blank'
+  );
 };
 
 // Scroll reveal
-const obs = new IntersectionObserver(es => es.forEach(e => {
-  if (e.isIntersecting) e.target.classList.add('in');
-}), { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+const obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) e.target.classList.add('in');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+
 </script>
 </body>
 </html>
