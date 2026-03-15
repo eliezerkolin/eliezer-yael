@@ -264,12 +264,12 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
 const CFG = {
-  brideName: 'יעל',
-  groomName: 'אלעזר',
-  dateGreg:  '05.05.2025',
-  calDate:   '20250505',
-  venue:     'בית זלטה, כפר חב"ד ב'',
-  wazeQ:     'בית+זלטה+כפר+חבד',
+  brideName: "יעל",
+  groomName: "אלעזר",
+  dateGreg:  "05.05.2025",
+  calDate:   "20250505",
+  venue:     "בית זלטה, כפר חבד",
+  wazeQ:     "בית+זלטה+כפר+חבד",
 };
 
 let attend = null;
@@ -350,14 +350,14 @@ function showDuplicateMsg(name) {
 }
 
 window.saveDate = function() {
-  const t = encodeURIComponent('חתונת ' + CFG.groomName + ' ו' + CFG.brideName);
-  const l = encodeURIComponent(CFG.venue);
-  const d = encodeURIComponent('חופה: 18:00 | לפני השקיעה | בית זלטה, כפר חב"ד ב'');
+  var t = encodeURIComponent("חתונת " + CFG.groomName + " ו" + CFG.brideName);
+  var l = encodeURIComponent(CFG.venue);
+  var d = encodeURIComponent("חופה: 18:00 | לפני השקיעה | בית זלטה, כפר חבד");
   window.open(
-    'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + t +
-    '&dates=' + CFG.calDate + 'T160000/' + CFG.calDate + 'T235900' +
-    '&location=' + l + '&details=' + d,
-    '_blank'
+    "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + t +
+    "&dates=" + CFG.calDate + "T160000/" + CFG.calDate + "T235900" +
+    "&location=" + l + "&details=" + d,
+    "_blank"
   );
 };
 
