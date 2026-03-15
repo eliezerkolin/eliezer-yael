@@ -736,35 +736,99 @@ function renderTable() {
     return;
   }
 
-  var html = "<table><thead><tr><th>#</th><th>שם</th><th class="col-phone">טלפון</th><th>מגיע?</th><th class="col-num">אורחים</th><th class="col-date">תאריך</th><th class="col-del"></th></tr></thead><tbody>";
+  // Build table using DOM - no quote issues
+  var table = document.createElement("table");
 
+  // Header
+  var thead = document.createElement("thead");
+  var hrow  = document.createElement("tr");
+  var headers = [
+    { text: "#",      cls: "" },
+    { text: "שם",     cls: "" },
+    { text: "טלפון",  cls: "col-phone" },
+    { text: "מגיע?",  cls: "" },
+    { text: "אורחים", cls: "col-num" },
+    { text: "תאריך",  cls: "col-date" },
+    { text: "",       cls: "col-del" }
+  ];
+  headers.forEach(function(h) {
+    var th = document.createElement("th");
+    th.textContent = h.text;
+    if (h.cls) th.className = h.cls;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // Body
+  var tbody = document.createElement("tbody");
   filtered.forEach(function(r, i) {
-    var phone  = r.phone ? r.phone : "—";
-    var badge  = r.attend === "yes" ? "מגיע/ה" : "לא מגיע/ה";
-    var bClass = r.attend === "yes" ? "b-yes" : "b-no";
-    var guests = r.attend === "yes" ? (r.guests || 1) : "—";
-    var ts     = r.timestamp || "";
+    var tr = document.createElement("tr");
 
-    html += "<tr>";
-    html += "<td>" + (i+1) + "</td>";
-    html += "<td><strong>" + r.name + "</strong></td>";
-    html += "<td class=\'col-phone\'>" + phone + "</td>";
-    html += "<td><span class=\'badge " + bClass + "\'>" + badge + "</span></td>";
-    html += "<td class=\'col-num\'>" + guests + "</td>";
-    html += "<td class=\'col-date\' style=\'color:var(--muted);font-size:0.8rem\'>" + ts + "</td>";
-    html += "<td><button data-id='" + r.id + "' class='del-btn' style='background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem'>🗑</button></td>";
-    html += "</tr>";
+    // #
+    var td0 = document.createElement("td");
+    td0.textContent = i + 1;
+    tr.appendChild(td0);
+
+    // שם
+    var td1 = document.createElement("td");
+    var strong = document.createElement("strong");
+    strong.textContent = r.name;
+    td1.appendChild(strong);
+    tr.appendChild(td1);
+
+    // טלפון
+    var td2 = document.createElement("td");
+    td2.className = "col-phone";
+    if (r.phone) {
+      var a = document.createElement("a");
+      a.href = "tel:" + r.phone;
+      a.textContent = r.phone;
+      a.style.cssText = "color:var(--navy-m);text-decoration:none";
+      td2.appendChild(a);
+    } else {
+      td2.textContent = "—";
+    }
+    tr.appendChild(td2);
+
+    // מגיע?
+    var td3 = document.createElement("td");
+    var badge = document.createElement("span");
+    badge.className = "badge " + (r.attend === "yes" ? "b-yes" : "b-no");
+    badge.textContent = r.attend === "yes" ? "✓ מגיע/ה" : "✗ לא מגיע/ה";
+    td3.appendChild(badge);
+    tr.appendChild(td3);
+
+    // אורחים
+    var td4 = document.createElement("td");
+    td4.className = "col-num";
+    td4.textContent = r.attend === "yes" ? (r.guests || 1) : "—";
+    tr.appendChild(td4);
+
+    // תאריך
+    var td5 = document.createElement("td");
+    td5.className = "col-date";
+    td5.style.cssText = "color:var(--muted);font-size:0.8rem";
+    td5.textContent = r.timestamp || "";
+    tr.appendChild(td5);
+
+    // מחיקה
+    var td6 = document.createElement("td");
+    td6.className = "col-del";
+    var delBtn = document.createElement("button");
+    delBtn.style.cssText = "background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem;padding:0.2rem 0.5rem";
+    delBtn.title = "מחק";
+    delBtn.textContent = "🗑";
+    delBtn.addEventListener("click", function() { deleteRSVP(r.id); });
+    td6.appendChild(delBtn);
+    tr.appendChild(td6);
+
+    tbody.appendChild(tr);
   });
 
-  html += "</tbody></table>";
-  wrap.innerHTML = html;
-
-  // Attach delete listeners safely
-  wrap.querySelectorAll(".del-btn").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      deleteRSVP(this.getAttribute("data-id"));
-    });
-  });
+  table.appendChild(tbody);
+  wrap.innerHTML = "";
+  wrap.appendChild(table);
 }
 
 // ===== DELETE =====
