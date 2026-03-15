@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>פאנל ניהול — אלעזר ויעל</title>
+<title>פאנל ניהול — אליעזר ויעל</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Alef:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -439,7 +439,7 @@
 <div class="login-page" id="login-page">
   <div class="login-card">
     <div style="font-size:2rem;margin-bottom:1rem">✦</div>
-    <h1 class="login-title">אלעזר &amp; יעל</h1>
+    <h1 class="login-title">אליעזר &amp; יעל</h1>
     <p class="login-sub">פאנל ניהול אורחים</p>
 
     <button class="google-btn" id="google-btn" onclick="signInWithGoogle()">
@@ -458,8 +458,8 @@
 
   <header class="admin-header">
     <div>
-      <div class="admin-header-title">אלעזר &amp; יעל — פאנל אורחים</div>
-      <div class="admin-header-sub">05.05.2025 &nbsp;·&nbsp; בית זלטה, כפר חב״ד &nbsp;·&nbsp; <span id="user-email" style="opacity:0.7"></span></div>
+      <div class="admin-header-title">אליעזר &amp; יעל — פאנל אורחים</div>
+      <div class="admin-header-sub">05.05.2026 &nbsp;·&nbsp; בית זלטה, כפר חב״ד &nbsp;·&nbsp; <span id="user-email" style="opacity:0.7"></span></div>
     </div>
     <button class="logout-btn" onclick="logout()">התנתק</button>
   </header>
@@ -730,7 +730,7 @@ function exportCSV() {
   var csv = "\uFEFF" + lines.join("\n");
   var a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-  a.download = "אורחים_אלעזר_ויעל.csv";
+  a.download = "אורחים_אליעזר_ויעל.csv";
   a.click();
 }
 
