@@ -762,24 +762,45 @@ function renderPermissions(emails) {
   var list = document.getElementById("perm-list");
   if (!list) return;
 
-  var html = '<div class="perm-item">' +
-    '<span class="perm-email">' + OWNER_EMAIL + '</span>' +
-    '<span class="perm-owner-badge">בעלים</span>' +
-    '</div>';
+  list.innerHTML = "";
 
-  if (emails.length === 0) {
-    html += '<p class="perm-empty">אין מורשים נוספים</p>';
-  } else {
-    emails.forEach(function(item) {
-      if (item.email.toLowerCase() === OWNER_EMAIL) return;
-      html += '<div class="perm-item">' +
-        '<span class="perm-email">' + item.email + '</span>' +
-        '<button class="perm-del-btn" onclick="removePermission('' + item.id + '', '' + item.email + '')" title="הסר הרשאה">🗑</button>' +
-        '</div>';
-    });
+  // Owner row
+  var ownerDiv = document.createElement("div");
+  ownerDiv.className = "perm-item";
+  ownerDiv.innerHTML = "<span class='perm-email'>" + OWNER_EMAIL + "</span><span class='perm-owner-badge'>בעלים</span>";
+  list.appendChild(ownerDiv);
+
+  // Others
+  var others = emails.filter(function(e) { return e.email.toLowerCase() !== OWNER_EMAIL; });
+
+  if (others.length === 0) {
+    var empty = document.createElement("p");
+    empty.className = "perm-empty";
+    empty.textContent = "אין מורשים נוספים";
+    list.appendChild(empty);
+    return;
   }
 
-  list.innerHTML = html;
+  others.forEach(function(item) {
+    var row    = document.createElement("div");
+    row.className = "perm-item";
+
+    var emailSpan = document.createElement("span");
+    emailSpan.className = "perm-email";
+    emailSpan.textContent = item.email;
+
+    var delBtn = document.createElement("button");
+    delBtn.className = "perm-del-btn";
+    delBtn.title = "הסר הרשאה";
+    delBtn.textContent = "🗑";
+    delBtn.addEventListener("click", function() {
+      removePermission(item.id, item.email);
+    });
+
+    row.appendChild(emailSpan);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
 }
 
 function addPermission() {
