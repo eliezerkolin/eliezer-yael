@@ -204,58 +204,55 @@
     .actions { flex-direction:column; align-items:stretch; }
     .actions .btn { justify-content:center; }
 
-    /* Countdown — smaller on mobile */
-    .countdown { gap: 0.5rem; margin-top: 1.2rem; }
-    .cd-box { min-width: 52px; padding: 0.6rem 0.4rem 0.4rem; }
-    .cd-num { font-size: 2rem; }
-    .cd-lbl { font-size: 0.55rem; }
-    .cd-sep { font-size: 1.5rem; margin-bottom: 0.8rem; }
   }
 
   /* COUNTDOWN */
   .countdown {
     margin-top: 1.8rem;
     display: flex;
-    gap: 1.2rem;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
     justify-content: center;
-    flex-wrap: wrap;
+    align-items: center;
     position: relative;
     z-index: 1;
-    opacity: 1;
+    width: 100%;
   }
   .cd-box {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 64px;
+    flex: 0 0 auto;
+    width: clamp(48px, 18vw, 72px);
     background: var(--navy-d);
     border-radius: 6px;
-    padding: 0.8rem 0.6rem 0.5rem;
+    padding: clamp(0.4rem, 1.5vw, 0.8rem) clamp(0.3rem, 1vw, 0.6rem);
     box-shadow: 0 4px 16px rgba(30,45,80,0.15);
   }
   .cd-num {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2.6rem;
+    font-size: clamp(1.4rem, 5vw, 2.6rem);
     font-weight: 300;
     color: var(--gold-l);
     line-height: 1;
-    min-width: 2ch;
     text-align: center;
+    width: 100%;
   }
   .cd-lbl {
-    font-size: 0.6rem;
-    letter-spacing: 0.18em;
+    font-size: clamp(0.45rem, 1.5vw, 0.6rem);
+    letter-spacing: 0.12em;
     color: rgba(232,237,245,0.55);
     text-transform: uppercase;
-    margin-top: 0.35rem;
+    margin-top: 0.25rem;
+    text-align: center;
   }
   .cd-sep {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
+    font-size: clamp(1.2rem, 4vw, 2rem);
     color: var(--navy-d);
     opacity: 0.5;
-    align-self: center;
-    margin-bottom: 1rem;
+    flex-shrink: 0;
+    margin-bottom: 0.8rem;
   }
   .cd-done {
     font-family: 'Cormorant Garamond', serif;
