@@ -406,12 +406,12 @@
   </div>
 </div>
 
-<script type="module">
-import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-const firebaseConfig = {
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+var firebaseConfig = {
   apiKey: "AIzaSyA1-aiJyORQkHyVIKLjXzCVvCa1tb67aBg",
   authDomain: "eliezer-yael-wedding.firebaseapp.com",
   projectId: "eliezer-yael-wedding",
@@ -420,75 +420,67 @@ const firebaseConfig = {
   appId: "1:980359740134:web:b9006d2d90fe71c9ce5927"
 };
 
-const ALLOWED_EMAILS = ["eliezerkolin@gmail.com"];
+firebase.initializeApp(firebaseConfig);
+var db   = firebase.firestore();
+var auth = firebase.auth();
+var provider = new firebase.auth.GoogleAuthProvider();
 
-const app      = initializeApp(firebaseConfig);
-const db       = getFirestore(app);
-const auth     = getAuth(app);
-const provider = new GoogleAuthProvider();
+var ALLOWED_EMAILS = ["eliezerkolin@gmail.com"];
+var rsvps = [];
+var currentFilter = "all";
 
-let rsvps = [];
-let currentFilter = "all";
-
-// ===== AUTH =====
-onAuthStateChanged(auth, function(user) {
+// ===== AUTH STATE =====
+auth.onAuthStateChanged(function(user) {
   if (user && ALLOWED_EMAILS.includes(user.email.toLowerCase())) {
     document.getElementById("login-page").style.display  = "none";
     document.getElementById("admin-page").style.display  = "block";
     document.getElementById("user-email").textContent    = user.email;
     loadAndRender();
   } else if (user) {
-    signOut(auth);
-    document.getElementById("denied-email").textContent     = user.email;
-    document.getElementById("access-denied").style.display  = "block";
-    document.getElementById("login-main").style.display     = "none";
+    auth.signOut();
+    document.getElementById("denied-email").textContent    = user.email;
+    document.getElementById("access-denied").style.display = "block";
+    document.getElementById("login-main").style.display    = "none";
   } else {
-    document.getElementById("login-page").style.display  = "flex";
-    document.getElementById("admin-page").style.display  = "none";
+    document.getElementById("login-page").style.display    = "flex";
+    document.getElementById("admin-page").style.display    = "none";
     document.getElementById("access-denied").style.display = "none";
-    document.getElementById("login-main").style.display  = "block";
+    document.getElementById("login-main").style.display    = "block";
   }
 });
 
-window.signInWithGoogle = async function() {
-  try {
-    provider.setCustomParameters({ prompt: "select_account" });
-    await signInWithPopup(auth, provider);
-  } catch(e) {
+function signInWithGoogle() {
+  provider.setCustomParameters({ prompt: "select_account" });
+  auth.signInWithPopup(provider).catch(function(e) {
     if (e.code !== "auth/popup-closed-by-user") {
-      alert("שגיאה בהתחברות, נסה שוב");
+      alert("שגיאה בהתחברות: " + e.message);
     }
-  }
-};
+  });
+}
 
-window.logout = async function() {
-  await signOut(auth);
-};
+function logout() {
+  auth.signOut();
+}
 
 // ===== LOAD =====
-async function loadAndRender() {
+function loadAndRender() {
   var wrap = document.getElementById("tbl-wrap");
-  if (wrap) {
-    wrap.innerHTML = "<div class=\"empty-state\"><div class=\"ei\" style=\"animation:spin 1s linear infinite;display:inline-block\">⏳</div><p>טוען נתונים...</p></div>";
-  }
+  if (wrap) wrap.innerHTML = "<div class='empty-state'><div class='ei'>⏳</div><p>טוען נתונים...</p></div>";
 
-  try {
-    var snap = await getDocs(collection(db, "rsvps"));
-    rsvps = snap.docs.map(function(d) {
-      return Object.assign({ id: d.id }, d.data());
+  db.collection("rsvps").get().then(function(snap) {
+    rsvps = [];
+    snap.forEach(function(d) {
+      rsvps.push(Object.assign({ id: d.id }, d.data()));
     });
     rsvps.sort(function(a, b) {
       return (b.timestamp || "").localeCompare(a.timestamp || "");
     });
-  } catch(e) {
-    console.error("Firestore error:", e);
+    renderStats();
+    renderTable();
+  }).catch(function(e) {
     var wrap2 = document.getElementById("tbl-wrap");
-    if (wrap2) wrap2.innerHTML = "<div class=\"empty-state\"><div class=\"ei\">❌</div><p>שגיאה בטעינת הנתונים: " + e.message + "</p></div>";
-    return;
-  }
-
-  renderStats();
-  renderTable();
+    if (wrap2) wrap2.innerHTML = "<div class='empty-state'><div class='ei'>❌</div><p>שגיאה: " + e.message + "</p></div>";
+  });
 }
 
 // ===== STATS =====
@@ -503,12 +495,12 @@ function renderStats() {
 }
 
 // ===== FILTER =====
-window.filterTable = function(f, btn) {
+function filterTable(f, btn) {
   currentFilter = f;
   document.querySelectorAll(".ftab").forEach(function(b) { b.classList.remove("active"); });
   btn.classList.add("active");
   renderTable();
-};
+}
 
 // ===== TABLE =====
 function renderTable() {
@@ -520,79 +512,72 @@ function renderTable() {
   if (!wrap) return;
 
   if (!filtered.length) {
-    wrap.innerHTML = "<div class=\"empty-state\"><div class=\"ei\">📋</div><p>" +
+    wrap.innerHTML = "<div class='empty-state'><div class='ei'>📋</div><p>" +
       (rsvps.length ? "אין תוצאות לפילטר זה" : "אין אישורי הגעה עדיין") + "</p></div>";
     return;
   }
 
   var rows = filtered.map(function(r, i) {
-    var phone = r.phone
-      ? "<a href=\"tel:" + r.phone + "\" style=\"color:var(--navy-m);text-decoration:none\">" + r.phone + "</a>"
-      : "—";
-    var badge = r.attend === "yes"
-      ? "<span class=\"badge b-yes\">✓ מגיע/ה</span>"
-      : "<span class=\"badge b-no\">✗ לא מגיע/ה</span>";
+    var phone  = r.phone ? "<a href='tel:" + r.phone + "' style='color:var(--navy-m);text-decoration:none'>" + r.phone + "</a>" : "—";
+    var badge  = r.attend === "yes" ? "<span class='badge b-yes'>✓ מגיע/ה</span>" : "<span class='badge b-no'>✗ לא מגיע/ה</span>";
     var guests = r.attend === "yes" ? (r.guests || 1) : "—";
-    return "<tr id=\"row-" + r.id + "\">" +
-      "<td data-label='#'>" + (i+1) + "</td>" +
-      "<td data-label='שם'><strong>" + r.name + "</strong></td>" +
-      "<td data-label='טלפון'>" + phone + "</td>" +
-      "<td data-label='מגיע?'>" + badge + "</td>" +
-      "<td data-label='אורחים'>" + guests + "</td>" +
-      "<td data-label='תאריך' style='color:var(--muted);font-size:0.8rem'>" + (r.timestamp||"") + "</td>" +
-      "<td><button onclick=\"deleteRSVP('" + r.id + "')\" style=\"background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem;padding:0.2rem 0.5rem\" title='מחק'>🗑</button></td>" +
+    return "<tr>" +
+      "<td>" + (i+1) + "</td>" +
+      "<td><strong>" + r.name + "</strong></td>" +
+      "<td>" + phone + "</td>" +
+      "<td>" + badge + "</td>" +
+      "<td>" + guests + "</td>" +
+      "<td style='color:var(--muted);font-size:0.8rem'>" + (r.timestamp || "") + "</td>" +
+      "<td><button onclick="deleteRSVP('" + r.id + "')" style='background:none;border:none;cursor:pointer;color:#c07070;font-size:1rem'>🗑</button></td>" +
       "</tr>";
   });
 
-  wrap.innerHTML = "<table><thead><tr>" +
-    "<th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th>" +
-    "</tr></thead><tbody>" + rows.join("") + "</tbody></table>";
+  wrap.innerHTML = "<table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>מגיע?</th><th>אורחים</th><th>תאריך</th><th></th></tr></thead><tbody>" + rows.join("") + "</tbody></table>";
 }
 
 // ===== DELETE =====
-window.deleteRSVP = async function(id) {
+function deleteRSVP(id) {
   if (!confirm("למחוק את הרשומה?")) return;
-  try {
-    await deleteDoc(doc(db, "rsvps", id));
+  db.collection("rsvps").doc(id).delete().then(function() {
     rsvps = rsvps.filter(function(r) { return r.id !== id; });
     renderStats();
     renderTable();
-  } catch(e) {
+  }).catch(function(e) {
     alert("שגיאה במחיקה: " + e.message);
-  }
-};
+  });
+}
 
 // ===== REFRESH =====
-window.refreshData = async function() {
+function refreshData() {
   var btn = document.getElementById("refresh-btn");
   btn.textContent = "⏳ מרענן...";
-  btn.disabled    = true;
-  await loadAndRender();
-  btn.textContent = "🔄 רענן";
-  btn.disabled    = false;
-};
+  btn.disabled = true;
+  db.collection("rsvps").get().then(function(snap) {
+    rsvps = [];
+    snap.forEach(function(d) { rsvps.push(Object.assign({ id: d.id }, d.data())); });
+    rsvps.sort(function(a, b) { return (b.timestamp || "").localeCompare(a.timestamp || ""); });
+    renderStats();
+    renderTable();
+    btn.textContent = "🔄 רענן";
+    btn.disabled = false;
+  });
+}
 
 // ===== EXPORT =====
-window.exportCSV = function() {
-  var rows = [["שם","טלפון","מגיע","מספר אורחים","תאריך אישור"]];
+function exportCSV() {
+  var rows = [["שם","טלפון","מגיע","מספר אורחים","תאריך"]];
   rsvps.forEach(function(r) {
-    rows.push([
-      r.name,
-      r.phone || "",
-      r.attend === "yes" ? "כן" : "לא",
-      r.attend === "yes" ? (r.guests || 1) : 0,
-      r.timestamp || ""
-    ]);
+    rows.push([r.name, r.phone||"", r.attend==="yes"?"כן":"לא", r.attend==="yes"?(r.guests||1):0, r.timestamp||""]);
   });
-  var csv = "﻿" + rows.map(function(r) {
-    return r.map(function(c) { return '"' + c + '"'; }).join(",");
-  }).join("
-");
+  var lines = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(",");
+  });
+  var csv = "\uFEFF" + lines.join("\n");
   var a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
   a.download = "אורחים_אלעזר_ויעל.csv";
   a.click();
-};
+}
 </script>
 </body>
 </html>
