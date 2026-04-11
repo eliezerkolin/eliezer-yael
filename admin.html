@@ -297,7 +297,8 @@
 
     /* הסתר עמודות פחות חשובות במובייל */
     .col-phone,
-    .col-date { display: none; }
+    .col-date,
+    .col-transport { display: none; }
 
     /* שורת מחיקה קטנה */
     .col-del { width: 30px; }
@@ -811,6 +812,20 @@ function renderTable() {
     td5.textContent = r.timestamp || "";
     tr.appendChild(td5);
 
+    // הסעה
+    var td6t = document.createElement("td");
+    td6t.className = "col-transport";
+    var tVal = r.transport || "—";
+    if (tVal === "כן") {
+      td6t.innerHTML = "<span style='color:#2a6a4a;font-weight:700'>🚌 כן</span>";
+    } else if (tVal === "לא") {
+      td6t.innerHTML = "<span style='color:var(--muted)'>🚗 לא</span>";
+    } else {
+      td6t.textContent = "—";
+      td6t.style.color = "var(--muted)";
+    }
+    tr.appendChild(td6t);
+
     // מחיקה
     var td6 = document.createElement("td");
     td6.className = "col-del";
@@ -860,9 +875,9 @@ function refreshData() {
 
 // ===== EXPORT =====
 function exportCSV() {
-  var rows = [["שם","טלפון","מגיע","מספר אורחים","תאריך"]];
+  var rows = [["שם","טלפון","מגיע","מספר אורחים","הסעה","תאריך"]];
   rsvps.forEach(function(r) {
-    rows.push([r.name, r.phone||"", r.attend==="yes"?"כן":"לא", r.attend==="yes"?(r.guests||1):0, r.timestamp||""]);
+    rows.push([r.name, r.phone||"", r.attend==="yes"?"כן":"לא", r.attend==="yes"?(r.guests||1):0, r.transport||"—", r.timestamp||""]);
   });
   var lines = rows.map(function(r) {
     return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(",");
