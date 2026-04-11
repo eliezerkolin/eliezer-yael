@@ -333,6 +333,14 @@
         </div>
       </div>
 
+      <div id="transport-block" style="display:none">
+        <label class="form-label">האם תזדקק/י להסעה?</label>
+        <div class="attend-grid" style="margin-bottom:0.8rem">
+          <button class="attend-btn" id="transport-yes" onclick="setTransport('yes', this)">🚌 &nbsp;כן, צריך הסעה</button>
+          <button class="attend-btn" id="transport-no"  onclick="setTransport('no', this)">🚗 &nbsp;לא, יש לי הסעה</button>
+        </div>
+      </div>
+
       <button class="submit-btn" onclick="doSubmit()">שלח אישור הגעה ✦</button>
     </div>
 
@@ -380,6 +388,7 @@ var CFG = {
 
 var attend = null;
 var gcount = 1;
+var transport = null;
 
 function setAttend(v, btn) {
   attend = v;
@@ -387,12 +396,25 @@ function setAttend(v, btn) {
     b.classList.remove("active-yes", "active-no");
   });
   btn.classList.add("active-" + v);
-  document.getElementById("guests-block").style.display = v === "yes" ? "block" : "none";
+  document.getElementById("guests-block").style.display    = v === "yes" ? "block" : "none";
+  document.getElementById("transport-block").style.display = v === "yes" ? "block" : "none";
+  transport = null;
+  document.querySelectorAll("#transport-yes, #transport-no").forEach(function(b) {
+    b.classList.remove("active-yes", "active-no");
+  });
 }
 
 function chg(d) {
   gcount = Math.max(1, Math.min(15, gcount + d));
   document.getElementById("cnt").textContent = gcount;
+}
+
+function setTransport(v, btn) {
+  transport = v;
+  document.querySelectorAll("#transport-yes, #transport-no").forEach(function(b) {
+    b.classList.remove("active-yes", "active-no");
+  });
+  btn.classList.add(v === "yes" ? "active-yes" : "active-no");
 }
 
 function doSubmit() {
@@ -417,10 +439,11 @@ function doSubmit() {
 
     // שמירה
     return db.collection("rsvps").add({
-      name: name,
-      phone: phone,
-      attend: attend,
-      guests: attend === "yes" ? gcount : 0,
+      name:      name,
+      phone:     phone,
+      attend:    attend,
+      guests:    attend === "yes" ? gcount : 0,
+      transport: attend === "yes" ? (transport === "yes" ? "כן" : transport === "no" ? "לא" : "לא צוין") : "לא רלוונטי",
       timestamp: new Date().toLocaleDateString("he-IL")
     });
   }).then(function(docRef) {
